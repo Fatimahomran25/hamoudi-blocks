@@ -1,0 +1,42 @@
+# يبني نسخة iOS من "بلوك حمودي" على ماك سحابي مجاني (macOS runner من
+# GitHub Actions) بدون أي حاجة لجهاز ماك حقيقي. الناتج IPA غير موقّع
+# (unsigned) — يُثبَّت على آيفون حمودي لاحقاً عبر أداة Sideloadly (على
+# جهاز Windows، بحساب Apple ID مجاني) بدل Xcode مباشرة.
+#
+# التشغيل: يدوياً من تبويب Actions بالمستودع (زر "Run workflow")، أو
+# تلقائياً عند أي push لفرع main.
+name: Build iOS (unsigned IPA)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build-ipa:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.38.7"
+          channel: "stable"
+
+      - run: flutter pub get
+
+      # --no-codesign: ما نحتاج شهادة توقيع أبل هنا — التوقيع يصير لاحقاً
+      # محلياً بـ Sideloadly وقت التثبيت الفعلي بحساب Apple ID المجاني.
+      - run: flutter build ios --release --no-codesign
+
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r hamoudi_blocks_unsigned.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hamoudi-blocks-ipa
+          path: hamoudi_blocks_unsigned.ipa
+          retention-days: 14

@@ -1,0 +1,61 @@
+name: hamoudi_blocks
+description: "بلوك حمودي - لعبة تعليمية للحروف والأرقام لعمر 4 سنوات."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+# ملاحظة (راجعي NEXT_STEPS.md بجذر المشروع لتفاصيل كل مرحلة):
+#   - Milestone 1 (هيكل التطبيق) و Milestone 2 (عالم اللعب 3D) منتهيتين.
+#   - Milestone 3 (الصوت المسجّل): audioplayers لسا ما انضاف (سيُستخدم فعلياً وقتها).
+#   - Milestone 4 (الباك اند): firebase_core, firebase_auth, cloud_firestore, firebase_messaging.
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ترجمة الويدجت الأساسية (اتجاه RTL صحيح، نصوص الأزرار الجاهزة...) للعربي.
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # خط عربي/إنجليزي دائري كرتوني (Baloo Bhaijaan 2) — يُحمَّل من Google Fonts.
+  google_fonts: ^6.2.1
+
+  # إدارة الحالة (بروفايلات الأطفال، الجلسة، التقدم).
+  provider: ^6.1.2
+
+  # تخزين محلي فوري (بدون إنترنت) لحساب الوالد وبروفايلات الأطفال والتقدم.
+  # لاحقاً (Milestone 4) نزامنه مع Firestore فوق نفس الطبقة (ProfileService).
+  shared_preferences: ^2.3.3
+
+  # لتوليد معرّفات فريدة لبروفايلات الأطفال.
+  uuid: ^4.5.1
+
+  # يعرض عالم اللعب ثلاثي الأبعاد (Three.js محلي بـ assets/game3d/) داخل
+  # WebView بدون إنترنت — التواصل مع Flutter عبر JavaScript Channel
+  # (راجعي lib/screens/game/game_screen.dart).
+  webview_flutter: ^4.14.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    # أصوات ومحتوى اللعبة — تُضاف فعلياً بـ Milestone 3، المجلد جاهز من الآن.
+    - assets/audio/
+    - assets/images/
+
+    # عالم اللعب ثلاثي الأبعاد (Milestone 2) — Three.js محلي بالكامل
+    # (بدون إنترنت)، يُحمَّل عبر webview_flutter's loadFlutterAsset.
+    # ملاحظة: تعريف الأصول بفلَتر ما يشمل المجلدات الفرعية تلقائياً،
+    # فلازم كل مجلد فيه ملفات يُذكر لحاله (vendor/ للمكتبة، fonts/ للخط).
+    - assets/game3d/
+    - assets/game3d/vendor/
+    - assets/game3d/fonts/
