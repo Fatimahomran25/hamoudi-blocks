@@ -86,13 +86,13 @@ class AudioService {
     }
   }
 
-  /// تلميح اتجاه — [direction] واحدة من 'ahead' / 'left' / 'right' (نفس
-  /// القيم اللي يرسلها assets/game3d/game.js). أي قيمة غير معروفة تُعامل
-  /// كـ 'ahead' بأمان بدل ما تفشل بصمت.
+  /// تلميح اتجاه — [direction] واحدة من 'ahead' / 'left' / 'right' /
+  /// 'behind' (نفس القيم اللي يرسلها assets/game3d/game.js). أي قيمة غير
+  /// معروفة تُعامل كـ 'ahead' بأمان بدل ما تفشل بصمت.
   Future<void> playHintDirection(String direction) async {
     if (!soundEnabled) return;
     HapticFeedback.lightImpact();
-    const valid = {'ahead', 'left', 'right'};
+    const valid = {'ahead', 'left', 'right', 'behind'};
     final safe = valid.contains(direction) ? direction : 'ahead';
     return _playAsset('phrases/hint_direction_$safe.wav');
   }

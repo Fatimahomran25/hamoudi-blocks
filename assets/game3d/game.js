@@ -108,7 +108,7 @@ const DemoAudio = {
       return;
     }
     if (event === 'hint_direction') {
-      const dir = ['ahead', 'left', 'right'].includes(extra?.direction) ? extra.direction : 'ahead';
+      const dir = ['ahead', 'left', 'right', 'behind'].includes(extra?.direction) ? extra.direction : 'ahead';
       this.playFile(`phrases/hint_direction_${dir}.wav`);
       return;
     }
@@ -137,9 +137,10 @@ const JUMP_VELOCITY = 8.5;
 const GRAVITY = 24;
 const HIT_RADIUS = 1.9; // مسافة "اللمس" بين اللاعب والمنصّة
 const HEART_START = 3;
-// تذكير دوري بالحرف/الرقم كل 5 ثواني وقت البحث (طلب صريح: "وهو يمشي
-// يكرر له الحرف") — يتبادل بين تكرار الحرف نفسه وتلميح الاتجاه.
-const REMINDER_DELAY_MS = 5000;
+// تذكير دوري بالحرف/الرقم كل 15 ثانية وقت البحث بدون تقدّم (طلب صريح) —
+// يتبادل بين تكرار الحرف نفسه صوتياً وتلميح اتجاه (أيقونة سهم صغيرة، مو
+// فقاعة كلام تسد الشاشة).
+const REMINDER_DELAY_MS = 15000;
 const IDLE_DELAY_MS = 2600;
 
 const COLORS = {
@@ -910,20 +911,32 @@ function giveDirectionHint() {
   const screenForward = new THREE.Vector3(0, 0, -1);
   const angle = signedAngleBetween(screenForward, toTarget);
 
+  // 4 أرباع متساوية (90° لكل وحدة) بدل 3 غير متساوية — تضيف "خلف" كاتجاه
+  // رابع (طلب صريح).
+  const ARROW_BY_DIRECTION = { ahead: '⬆️', right: '➡️', behind: '⬇️', left: '⬅️' };
   let direction;
-  let text;
-  if (Math.abs(angle) < 0.9) {
+  if (Math.abs(angle) < Math.PI / 4) {
     direction = 'ahead';
-    text = 'أمامك مباشرة! 👀';
+  } else if (Math.abs(angle) > (3 * Math.PI) / 4) {
+    direction = 'behind';
   } else if (angle > 0) {
     direction = 'right';
-    text = 'التفت يميناً قليلاً! ➡️';
   } else {
     direction = 'left';
-    text = 'التفت يساراً قليلاً! ⬅️';
   }
-  showSpeech(text, 2600);
+  // أيقونة سهم صغيرة بس (مو فقاعة كلام كبيرة تسد الشاشة) — الصوت يفضل
+  // يشتغل كامل زي المعتاد.
+  showDirectionArrow(ARROW_BY_DIRECTION[direction]);
   Bridge.audio('hint_direction', { direction });
+}
+
+let arrowHideTimer = null;
+function showDirectionArrow(arrow) {
+  const el = document.getElementById('direction-arrow');
+  el.textContent = arrow;
+  el.classList.add('visible');
+  if (arrowHideTimer) clearTimeout(arrowHideTimer);
+  arrowHideTimer = setTimeout(() => el.classList.remove('visible'), 1800);
 }
 
 function signedAngleBetween(a, b) {

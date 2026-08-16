@@ -195,13 +195,11 @@ class _LevelNode extends StatelessWidget {
               if (isCurrent)
                 Positioned(
                   left: centerX - 22,
-                  top: -38,
+                  top: -30,
                   child: IgnorePointer(
                     child: Column(
                       children: [
                         BlockyAvatarPreview(avatar: avatar, scale: 0.5),
-                        const SizedBox(height: 2),
-                        const Text('👇 انتِ هنا', style: TextStyle(fontSize: 11, color: AppColors.yellow)),
                       ],
                     ),
                   ),

@@ -177,6 +177,26 @@ html, body {
   transform: translateY(0);
 }
 
+/* أيقونة تلميح الاتجاه — صغيرة وشفافة جزئياً، تطفو أعلى نص الشاشة بدون
+   ما تسد رؤية اللعب (بدل فقاعة الكلام الكبيرة السابقة). */
+#direction-arrow {
+  position: absolute;
+  top: 118px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.7);
+  font-size: 30px;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 0 var(--ink));
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#direction-arrow.visible {
+  opacity: 0.92;
+  transform: translateX(-50%) scale(1);
+}
+
 /* ----- الجويستيك ----- */
 
 #joystick-zone {
