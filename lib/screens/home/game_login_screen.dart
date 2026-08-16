@@ -6,7 +6,9 @@ import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/big_button.dart';
 import '../../widgets/blocky_avatar.dart';
+import '../../widgets/responsive_center.dart';
 import '../settings/voice_settings_screen.dart';
+import '../settings/weak_points_screen.dart';
 import 'main_menu_screen.dart';
 
 /// شاشة "دخول اللعبة": هذي أول شي يشوفه الطفل عند فتح التطبيق بعد أول
@@ -27,60 +29,75 @@ class GameLoginScreen extends StatelessWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  icon: const Icon(Icons.settings, color: AppColors.textMuted, size: 30),
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => VoiceSettingsScreen(childId: childId),
-                    ),
+        // ResponsiveCenter بدل Column مباشر: تتمركز عادي بوضع الطول، وتصير
+        // قابلة للتمرير بدل ما تنقص/تتقصّ بوضع العرض (كان بق حقيقي هنا).
+        child: ResponsiveCenter(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.settings,
+                  color: AppColors.textMuted,
+                  size: 30,
+                ),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => VoiceSettingsScreen(childId: childId),
                   ),
                 ),
               ),
-              const Spacer(),
-              NeoBox(
-                color: avatar.jacketColor.withValues(alpha: 0.18),
-                borderRadius: 28,
-                padding: const EdgeInsets.all(28),
-                child: BlockyAvatarPreview(avatar: avatar, scale: 2.2),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'أهلاً يا ${child.name}! 👋',
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineMedium
-                    ?.copyWith(fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'جاهز نروح نلعب؟',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 16),
-              ),
-              const Spacer(),
-              BigButton(
-                label: 'يلا نلعب',
-                emoji: '🎮',
-                color: AppColors.green,
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => MainMenuScreen(childId: childId)),
+            ),
+            const Spacer(),
+            NeoBox(
+              color: avatar.jacketColor.withValues(alpha: 0.18),
+              borderRadius: 28,
+              padding: const EdgeInsets.all(28),
+              child: BlockyAvatarPreview(avatar: avatar, scale: 2.2),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'أهلاً يا ${child.name}! 👋',
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'جاهز نروح نلعب؟',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 16),
+            ),
+            const Spacer(),
+            BigButton(
+              label: 'يلا نلعب',
+              emoji: '🎮',
+              color: AppColors.green,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => MainMenuScreen(childId: childId),
                 ),
               ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => _confirmSwitchChild(context),
-                child: const Text(
-                  'تبديل الطفل (للوالدين)',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => WeakPointsScreen(childId: childId),
                 ),
               ),
-            ],
-          ),
+              child: const Text(
+                'نقاط ضعف الطفل (للوالدين)',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              ),
+            ),
+            TextButton(
+              onPressed: () => _confirmSwitchChild(context),
+              child: const Text(
+                'تبديل الطفل (للوالدين)',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -93,7 +110,10 @@ class GameLoginScreen extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('تبديل الطفل', style: TextStyle(color: AppColors.textLight)),
+        title: const Text(
+          'تبديل الطفل',
+          style: TextStyle(color: AppColors.textLight),
+        ),
         content: const Text(
           'هذي الميزة (إدارة أكثر من طفل بنفس الحساب) جاهزة بالبروفايل، وسيُضاف لها '
           'اختيار من قائمة الأطفال + بوابة والدين قبل الإطلاق الكامل.',

@@ -72,7 +72,10 @@ class _LevelResultScreenState extends State<LevelResultScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        // بوضع landscape (عرض) الارتفاع المتاح أقل بكثير — SingleChildScrollView
+        // تضمن إن الزر ("المستوى التالي"...) يفضل يوصله الطفل بالتمرير
+        // بدل ما ينقص/يُقصّ من الشاشة (كان بق حقيقي هنا، تم تصحيحه).
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

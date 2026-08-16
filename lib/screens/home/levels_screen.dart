@@ -27,7 +27,7 @@ class LevelsScreen extends StatefulWidget {
 }
 
 class _LevelsScreenState extends State<LevelsScreen> {
-  static const double _nodeSpacing = 150;
+  static const double _nodeSpacing = 200;
   static const double _nodeSize = 84;
   static const double _topPadding = 40;
 
@@ -94,6 +94,9 @@ class _LevelsScreenState extends State<LevelsScreen> {
             height: totalHeight,
             child: Stack(
               children: [
+                Positioned.fill(
+                  child: CustomPaint(painter: _NaturePainter(totalHeight: totalHeight)),
+                ),
                 Positioned.fill(
                   child: CustomPaint(
                     painter: _RoadmapPathPainter(
@@ -179,7 +182,7 @@ class _LevelNode extends StatelessWidget {
                 left: centerX - nodeSize / 2,
                 top: 0,
                 width: nodeSize,
-                height: nodeSize + 26, // الدائرة + المسافة + صف النجوم تحتها.
+                height: nodeSize + 36, // الدائرة + المسافة + صف النجوم الكبيرة تحتها.
                 child: _NodeBubble(
                   index: index,
                   unlocked: unlocked,
@@ -191,12 +194,12 @@ class _LevelNode extends StatelessWidget {
               ),
               if (isCurrent)
                 Positioned(
-                  left: centerX - 26,
-                  top: -46,
+                  left: centerX - 22,
+                  top: -38,
                   child: IgnorePointer(
                     child: Column(
                       children: [
-                        BlockyAvatarPreview(avatar: avatar, scale: 0.62),
+                        BlockyAvatarPreview(avatar: avatar, scale: 0.5),
                         const SizedBox(height: 2),
                         const Text('👇 انتِ هنا', style: TextStyle(fontSize: 11, color: AppColors.yellow)),
                       ],
@@ -263,7 +266,7 @@ class _NodeBubble extends StatelessWidget {
                   ),
           ),
           const SizedBox(height: 6),
-          if (unlocked) StarRow(earned: stars, size: 14),
+          if (unlocked) StarRow(earned: stars, size: 22),
         ],
       ),
     );
@@ -319,4 +322,60 @@ class _RoadmapPathPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _RoadmapPathPainter oldDelegate) =>
       oldDelegate.count != count || oldDelegate.spacing != spacing;
+}
+
+/// خلفية طبيعة بلوكية (أشجار وشجيرات بسيطة، صناديق ملوّنة زي هوية عالم
+/// اللعب) خلف المسار — بذرة ثابتة (Random(7)) عشان المواقع ما تتغيّر كل
+/// إعادة رسم، ومبعثرة قريب من حواف الشاشة عشان ما تزاحم المسار والعقد.
+class _NaturePainter extends CustomPainter {
+  _NaturePainter({required this.totalHeight});
+
+  final double totalHeight;
+
+  static const _trunkColor = Color(0xFF5A3D23);
+  static const _canopyColors = [Color(0xFF1F5C38), Color(0xFF267046), Color(0xFF184A2C)];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random(7);
+    final treeCount = (totalHeight / 130).round();
+
+    for (var i = 0; i < treeCount; i++) {
+      final onLeft = random.nextBool();
+      final marginFraction = 0.04 + random.nextDouble() * 0.10;
+      final x = onLeft ? size.width * marginFraction : size.width * (1 - marginFraction);
+      final y = random.nextDouble() * totalHeight;
+      final scale = 0.7 + random.nextDouble() * 0.6;
+      _drawTree(canvas, Offset(x, y), scale, _canopyColors[i % _canopyColors.length], random);
+    }
+  }
+
+  void _drawTree(Canvas canvas, Offset base, double scale, Color canopyColor, math.Random random) {
+    final trunkPaint = Paint()..color = _trunkColor;
+    final canopyPaint = Paint()..color = canopyColor.withValues(alpha: 0.8);
+
+    final trunkWidth = 10.0 * scale;
+    final trunkHeight = 26.0 * scale;
+    final trunkRect = Rect.fromLTWH(base.dx - trunkWidth / 2, base.dy - trunkHeight, trunkWidth, trunkHeight);
+    canvas.drawRect(trunkRect, trunkPaint);
+
+    final canopySize = 46.0 * scale;
+    final canopyRect = Rect.fromCenter(
+      center: Offset(base.dx, base.dy - trunkHeight - canopySize * 0.32),
+      width: canopySize,
+      height: canopySize * 0.75,
+    );
+    canvas.drawRRect(RRect.fromRectAndRadius(canopyRect, Radius.circular(6 * scale)), canopyPaint);
+
+    // كتلة ثانية أصغر فوق الأولى تعطي إحساس "بلوكات متراكمة" بدل مربع وحد.
+    final topRect = Rect.fromCenter(
+      center: Offset(base.dx, canopyRect.top + 6 * scale),
+      width: canopySize * 0.6,
+      height: canopySize * 0.45,
+    );
+    canvas.drawRRect(RRect.fromRectAndRadius(topRect, Radius.circular(5 * scale)), canopyPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _NaturePainter oldDelegate) => oldDelegate.totalHeight != totalHeight;
 }

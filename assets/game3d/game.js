@@ -885,9 +885,9 @@ function maybeRemind(now) {
   state.lastHintAt = now;
   state.reminderCount += 1;
 
-  // تذكير فردي = تكرار الحرف/الرقم نفسه (تعزيز للحفظ)، زوجي = تلميح اتجاه.
+  // تذكير فردي = تكرار الحرف/الرقم نفسه صوتياً بس (تعزيز للحفظ، بدون
+  // فقاعة كلام عشان ما تكون مشتّتة بصرياً)، زوجي = تلميح اتجاه (نص + صوت).
   if (state.reminderCount % 2 === 1) {
-    showSpeech(`قُل: ${state.target.symbol}... مثل ${state.target.exampleWord}! 🔁`, 2400);
     Bridge.audio('level_intro', { symbol: state.target.symbol });
     return;
   }

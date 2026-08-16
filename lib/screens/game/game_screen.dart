@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../data/content_repository.dart';
 import '../../models/avatar_option.dart';
+import '../../models/child_profile.dart';
 import '../../models/content_item.dart';
 import '../../services/audio_service.dart';
 import '../../services/profile_service.dart';
@@ -122,6 +123,26 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  /// عناصر المستوى العادية (4) + نقاط ضعف الطفل المحدّدة بنفس المجموعة
+  /// (لو موجودة) كجولات إضافية بالآخر — راجعي "نقاط ضعف الطفل" بشاشة
+  /// WeakPointsScreen. العناصر المكرّرة (موجودة أصلاً بالمستوى) ما تتكرر.
+  List<ContentItem> _buildRoundItems(ChildProfile child) {
+    final levelItems = ContentRepository.levelsFor(widget.group)[widget.levelIndex];
+    final weakSymbols = child.weakSymbolsFor(widget.group);
+    if (weakSymbols.isEmpty) return levelItems;
+
+    final levelSymbols = levelItems.map((i) => i.symbol).toSet();
+    final allGroupItems = ContentRepository.forGroup(widget.group);
+    final bonusItems = weakSymbols
+        .where((symbol) => !levelSymbols.contains(symbol))
+        .map((symbol) => allGroupItems.firstWhere(
+              (i) => i.symbol == symbol,
+              orElse: () => allGroupItems.first,
+            ))
+        .toList();
+    return [...levelItems, ...bonusItems];
+  }
+
   void _sendInitConfig() {
     final profileService = context.read<ProfileService>();
     final child = profileService.children.firstWhere(
@@ -129,7 +150,7 @@ class _GameScreenState extends State<GameScreen> {
       orElse: () => profileService.children.first,
     );
     final avatar = avatarById(child.avatarId);
-    final items = ContentRepository.levelsFor(widget.group)[widget.levelIndex];
+    final items = _buildRoundItems(child);
 
     final config = {
       'childName': child.name,

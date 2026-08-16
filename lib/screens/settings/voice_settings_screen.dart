@@ -5,9 +5,8 @@ import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 
 /// إعدادات الصوت. بحسب قسم "جودة الصوت" بالبرومت الأصلي، القرار المعتمد
-/// هو أصوات مسجّلة مسبقاً (مو TTS حي)، فما فيه هنا اختيار "صوت الجهاز"
-/// — فقط تشغيل/إيقاف الصوت بشكل عام لحد ما تُضاف المقاطع الفعلية
-/// بـ Milestone 3.
+/// هو أصوات مسجّلة مسبقاً (مو TTS حي، راجعي lib/services/audio_service.dart)
+/// — فقط تشغيل/إيقاف الصوت بشكل عام هنا، ما فيه اختيار "صوت الجهاز".
 class VoiceSettingsScreen extends StatelessWidget {
   const VoiceSettingsScreen({super.key, required this.childId});
 
@@ -37,16 +36,6 @@ class VoiceSettingsScreen extends StatelessWidget {
                   ),
                   onChanged: (value) =>
                       context.read<ProfileService>().setSoundEnabled(childId, value),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const NeoBox(
-                color: AppColors.surfaceLight,
-                child: Text(
-                  '🚧 قريباً: أصوات عربية طبيعية مسجّلة مسبقاً لكل حرف ورقم وعبارة '
-                  'تشجيع (بدل صوت الجهاز الروبوتي) — راجعي قسم "جودة الصوت" بخطة '
-                  'المشروع لتفاصيل التوليد.',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.6),
                 ),
               ),
             ],

@@ -102,4 +102,29 @@ class ProfileService extends ChangeNotifier {
     await _persist();
     notifyListeners();
   }
+
+  /// يفعّل/يعطّل علامة "نقطة ضعف" على عنصر (حرف/رقم) — راجعي
+  /// lib/screens/settings/weak_points_screen.dart.
+  Future<void> setWeakItem({
+    required String childId,
+    required ContentGroup group,
+    required String symbol,
+    required bool isWeak,
+  }) async {
+    final child = _children.firstWhere((c) => c.id == childId);
+    child.setWeakItem(group, symbol, isWeak);
+    await _persist();
+    notifyListeners();
+  }
+
+  /// يمسح تقدم مجموعة كاملة (كل النجوم، تُقفل كل المستويات إلا الأول).
+  Future<void> resetGroupProgress({
+    required String childId,
+    required ContentGroup group,
+  }) async {
+    final child = _children.firstWhere((c) => c.id == childId);
+    child.resetProgress(group);
+    await _persist();
+    notifyListeners();
+  }
 }
