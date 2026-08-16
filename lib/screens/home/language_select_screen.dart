@@ -22,7 +22,7 @@ class LanguageSelectScreen extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Row(
+          child: Column(
             children: [
               Expanded(
                 child: _LangCard(
@@ -32,7 +32,7 @@ class LanguageSelectScreen extends StatelessWidget {
                   onTap: () => _openLevels(context, isArabic: true),
                 ),
               ),
-              const SizedBox(width: 20),
+              const SizedBox(height: 20),
               Expanded(
                 child: _LangCard(
                   flag: '🇬🇧',
@@ -78,17 +78,16 @@ class _LangCard extends StatelessWidget {
       child: NeoBox(
         color: color,
         borderRadius: 28,
-        child: AspectRatio(
-          aspectRatio: 0.85,
+        child: SizedBox.expand(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(flag, style: const TextStyle(fontSize: 60)),
-              const SizedBox(height: 10),
+              Text(flag, style: const TextStyle(fontSize: 72)),
+              const SizedBox(height: 12),
               Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 30,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
                 ),

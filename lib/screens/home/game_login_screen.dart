@@ -90,41 +90,8 @@ class GameLoginScreen extends StatelessWidget {
                 style: TextStyle(color: AppColors.textMuted, fontSize: 13),
               ),
             ),
-            TextButton(
-              onPressed: () => _confirmSwitchChild(context),
-              child: const Text(
-                'تبديل الطفل (للوالدين)',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-              ),
-            ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _confirmSwitchChild(BuildContext context) {
-    // TODO(milestone-4): بوابة والدين حقيقية (سؤال حسابي بسيط) بدل تأكيد
-    // مباشر، عشان الطفل ما يقدر يخرج من بروفايله بالغلط.
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text(
-          'تبديل الطفل',
-          style: TextStyle(color: AppColors.textLight),
-        ),
-        content: const Text(
-          'هذي الميزة (إدارة أكثر من طفل بنفس الحساب) جاهزة بالبروفايل، وسيُضاف لها '
-          'اختيار من قائمة الأطفال + بوابة والدين قبل الإطلاق الكامل.',
-          style: TextStyle(color: AppColors.textMuted),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('حسناً'),
-          ),
-        ],
       ),
     );
   }

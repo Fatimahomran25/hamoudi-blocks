@@ -144,9 +144,17 @@ class _WeakPointsScreenState extends State<WeakPointsScreen> {
           ),
         ),
         Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Text(
+            'عند الضغط، تُقفَل كل مستويات هذا القسم من جديد',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+          ),
+        ),
+        Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           child: BigButton(
-            label: 'ريست تقدّم هالقسم (كل المستويات تقفل من جديد)',
+            label: 'إعادة تعيين تقدّم القسم',
             emoji: '♻️',
             color: AppColors.surfaceLight,
             onPressed: () => _confirmReset(context, group),
@@ -161,9 +169,9 @@ class _WeakPointsScreenState extends State<WeakPointsScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('تأكيد الريست', style: TextStyle(color: AppColors.textLight)),
+        title: const Text('تأكيد إعادة التعيين', style: TextStyle(color: AppColors.textLight)),
         content: Text(
-          'بيتصفّر كل تقدّم "${group.titleAr}" (النجوم والمستويات المفتوحة) — ما يمسح نقاط الضعف المحدّدة. متأكدة؟',
+          'سيُصفَّر كل تقدّم "${group.titleAr}" (النجوم والمستويات المفتوحة) — دون مسح نقاط الضعف المحدَّدة. هل أنتِ متأكدة؟',
           style: const TextStyle(color: AppColors.textMuted),
         ),
         actions: [
@@ -176,7 +184,7 @@ class _WeakPointsScreenState extends State<WeakPointsScreen> {
               context.read<ProfileService>().resetGroupProgress(childId: widget.childId, group: group);
               Navigator.of(dialogContext).pop();
             },
-            child: const Text('تأكيد الريست', style: TextStyle(color: AppColors.red)),
+            child: const Text('تأكيد إعادة التعيين', style: TextStyle(color: AppColors.red)),
           ),
         ],
       ),
