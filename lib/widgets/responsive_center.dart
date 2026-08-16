@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
-/// يخلي محتوى Column يتمركز عمودياً لما فيه مساحة كافية (زي المعتاد
-/// بالوضع الطولي)، وبدل ما ينقص/يُقصّ من الشاشة لما المساحة تضيق (وضع
-/// landscape/العرض على جوال) يصير قابل للتمرير بدل ما يطيح أي جزء من
-/// المحتوى (كان بق حقيقي بأكثر من شاشة، راجعي NEXT_STEPS.md).
+/// Makes a Column's content center vertically when there's enough room (as
+/// usual in portrait), and instead of shrinking/clipping when space gets
+/// tight (landscape orientation on a phone), becomes scrollable instead of
+/// losing any part of the content (was a real bug across several screens,
+/// see NEXT_STEPS.md).
 ///
-/// استخدميه بدل [Column] مباشرة داخل [SafeArea]/[Padding] بأي شاشة فيها
-/// [Spacer] أو `mainAxisAlignment: MainAxisAlignment.center` بمحتوى قد
-/// يطول عن الشاشة بوضع العرض.
+/// Use this instead of [Column] directly inside [SafeArea]/[Padding] on
+/// any screen with a [Spacer] or `mainAxisAlignment: MainAxisAlignment.center`
+/// whose content might exceed the screen height in landscape.
 class ResponsiveCenter extends StatelessWidget {
   const ResponsiveCenter({
     super.key,

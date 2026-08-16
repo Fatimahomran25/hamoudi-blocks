@@ -4,7 +4,7 @@ import '../../theme/app_theme.dart';
 import 'levels_screen.dart';
 import 'main_menu_screen.dart';
 
-/// اختيار اللغة: 🇸🇦 عربي / 🇬🇧 English.
+/// Language selection: 🇸🇦 Arabic / 🇬🇧 English.
 class LanguageSelectScreen extends StatelessWidget {
   const LanguageSelectScreen({
     super.key,

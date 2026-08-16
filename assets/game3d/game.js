@@ -1,30 +1,33 @@
-// عالم اللعب ثلاثي الأبعاد — "بلوك حمودي" (Milestone 2).
+// 3D game world — "Hamoudi Blocks" (Milestone 2).
 //
-// شخصية بلوكية تُتحكَّم بجويستيك لمسي حر الحركة داخل أرضية محاطة بسياج،
-// تبحث بين 4 منصّات موزعة عشوائياً (360°) عن الحرف/الرقم الصحيح. نظام
-// قلوب (3)، تلميح اتجاه بعد 9 ثواني، احتفال + نجمة عند الإصابة، وقفة
-// ودّية عند الخطأ. راجعي قسم "آلية اللعب" بالبرومت الأصلي لتفاصيل التصميم.
+// A blocky character controlled by a free-moving touch joystick inside a
+// fenced-in ground, searching among 4 pedestals scattered randomly around
+// (360°) for the correct letter/number. Hearts system (3), a direction hint
+// after 9 seconds, celebration + a star on a hit, a friendly stumble on a
+// miss. See the "Gameplay" section of the original prompt for design details.
 //
-// جسر التواصل مع Flutter (طرفه الآخر بـ lib/screens/game/game_screen.dart):
-//   Flutter → الصفحة: window.HamoudiGame.init(config) بعد استقبال {type:'ready'}.
-//   الصفحة → Flutter: GameChannel.postMessage(JSON.stringify(msg)) لكل من:
+// Bridge to Flutter (the other end lives in lib/screens/game/game_screen.dart):
+//   Flutter → page: window.HamoudiGame.init(config) after receiving {type:'ready'}.
+//   Page → Flutter: GameChannel.postMessage(JSON.stringify(msg)) for each of:
 //     {type:'ready'}
 //     {type:'audio', event:'...', symbol?, direction?}
 //     {type:'result', outcome:'win', heartsRemaining} | {outcome:'retry', roundIndex}
 //     {type:'exit'}
 
-// ملاحظة مهمة: Three.js يُحمَّل هنا كسكربت عادي (UMD، متغيّر THREE عام)
-// عبر <script src="./vendor/three.min.js"> بـ index.html قبل هالملف —
-// مو كـ ES Module (import). جرّبنا ES Modules أول، لكن WKWebView بآيفون
-// (عبر webview_flutter's loadFlutterAsset) ما يضمن نوع MIME صحيح
-// (text/javascript) للملفات المحلية، وسكربتات type="module" صارمة بهالخصوص
-// فتفشل بصمت (يعلق التحميل على شاشة 🧊 للأبد). السكربت العادي مرن أكثر
-// ويشتغل بثبات على أندرويد وآيفون معاً.
+// Important note: Three.js is loaded here as a plain script (UMD, global
+// THREE variable) via <script src="./vendor/three.min.js"> in index.html
+// before this file — NOT as an ES Module (import). We tried ES Modules
+// first, but WKWebView on iOS (via webview_flutter's loadFlutterAsset)
+// doesn't guarantee a correct MIME type (text/javascript) for local files,
+// and type="module" scripts are strict about this, so they fail silently
+// (loading hangs forever on the 🧊 screen). A plain script is more
+// forgiving and works reliably on both Android and iOS.
 
-// ============================== الجسر (Bridge) ==============================
+// ============================== Bridge ==============================
 
-/** true لو الصفحة مفتوحة جوا webview_flutter الحقيقي (فيه GameChannel)،
- * false لو مفتوحة لحالها بمتصفح عادي (وضع اختبار/تطوير مباشر). */
+/** true if the page is open inside a real webview_flutter (GameChannel
+ * present), false if it's open standalone in a regular browser (test/dev
+ * mode). */
 function hasBridge() {
   return !!(window.GameChannel && typeof window.GameChannel.postMessage === 'function');
 }
@@ -45,18 +48,19 @@ const Bridge = {
   },
   audio(event, extra) {
     Bridge.send({ type: 'audio', event, ...extra });
-    // بوضع الاختبار المباشر بالمتصفح (بدون Flutter) ما فيه AudioService
-    // يشغّل الملف — نشغّله هنا مباشرة عشان نقدر نسمع نفس الأصوات
-    // الحقيقية بدون الحاجة لتطبيق Flutter كامل.
+    // In standalone browser test mode (no Flutter) there's no AudioService
+    // to play the file — we play it directly here so we can hear the same
+    // real audio without needing a full Flutter app.
     if (!hasBridge()) DemoAudio.play(event, extra);
   },
 };
 
-// ============================== صوت وضع الاختبار المباشر ==============================
-// نفس منطق lib/services/audio_service.dart بالضبط (نفس أسماء الملفات
-// وترتيب المحتوى) — بس بجافاسكربت عشان يشتغل بدون Flutter. الملفات
-// تُقرأ من سيرفر محلي منفصل (راجعي assets/audio/ — شغّليه بأمر مثل:
-// node static_server.js assets/audio 8792) لأنها خارج مجلد game3d/.
+// ============================== Standalone test-mode audio ==============================
+// Mirrors lib/services/audio_service.dart's logic exactly (same filenames
+// and content ordering) — just in JavaScript so it works without Flutter.
+// Files are read from a separate local server (see assets/audio/ — run it
+// with something like: node static_server.js assets/audio 8792) since
+// they're outside the game3d/ folder.
 const DemoAudio = {
   baseUrl: 'http://localhost:8792/',
   arabicLetters: ['أ', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'م', 'ن', 'هـ', 'و', 'ي'],
@@ -82,9 +86,10 @@ const DemoAudio = {
 
   playFile(relativePath) {
     try {
-      // نوقف أي صوت شغّال قبل، بالضبط زي AudioService.dart (مشغّل واحد
-      // مشترك) — وإلا يصير تداخل صوتين لو صوت جديد يبدأ قبل ما يخلص
-      // اللي قبله (كان بق حقيقي هنا، تم تصحيحه).
+      // Stop any audio currently playing first, exactly like
+      // AudioService.dart (one shared player) — otherwise a new sound
+      // starting before the previous one finishes causes overlap (was a
+      // real bug here, now fixed).
       if (this.currentAudio) {
         this.currentAudio.pause();
         this.currentAudio.currentTime = 0;
@@ -93,7 +98,7 @@ const DemoAudio = {
       this.currentAudio = audio;
       audio.play().catch(() => {});
     } catch (err) {
-      // سيرفر الصوت مو شغّال أو الملف مو موجود — نتجاهل بأمان.
+      // Audio server isn't running or the file doesn't exist — ignore safely.
     }
   },
 
@@ -127,19 +132,20 @@ const DemoAudio = {
   },
 };
 
-// ============================== الثوابت ==============================
+// ============================== Constants ==============================
 
-const ARENA_RADIUS = 17.5; // حد السياج — الشخصية ما تتعدّاه.
+const ARENA_RADIUS = 17.5; // Fence boundary — the character can't cross it.
 const PEDESTAL_MIN_RADIUS = 6;
 const PEDESTAL_MAX_RADIUS = 13;
-const MOVE_SPEED = 6.4; // وحدات/ثانية
+const MOVE_SPEED = 6.4; // units/second
 const JUMP_VELOCITY = 8.5;
 const GRAVITY = 24;
-const HIT_RADIUS = 1.9; // مسافة "اللمس" بين اللاعب والمنصّة
+const HIT_RADIUS = 1.9; // "touch" distance between the player and a pedestal
 const HEART_START = 3;
-// تذكير دوري بالحرف/الرقم كل 15 ثانية وقت البحث بدون تقدّم (طلب صريح) —
-// يتبادل بين تكرار الحرف نفسه صوتياً وتلميح اتجاه (أيقونة سهم صغيرة، مو
-// فقاعة كلام تسد الشاشة).
+// Periodic reminder of the letter/number every 15 seconds of searching with
+// no progress (explicit request) — alternates between repeating the letter
+// itself by voice and a direction hint (small arrow icon, not a speech
+// bubble blocking the screen).
 const REMINDER_DELAY_MS = 15000;
 const IDLE_DELAY_MS = 2600;
 
@@ -155,7 +161,7 @@ const COLORS = {
 
 const PLATE_PALETTE = [COLORS.blue, COLORS.purple, COLORS.orange, COLORS.green];
 
-// ============================== حالة اللعبة ==============================
+// ============================== Game state ==============================
 
 /** @type {{childName:string, avatar:{jacket:string,skin:string,hair:string}, items:Array<{symbol:string,exampleWord:string,emoji:string}>, resumeAt:number}} */
 let config = null;
@@ -178,7 +184,7 @@ const state = {
   roundStartedAt: 0,
 };
 
-// ============================== إعداد المشهد ==============================
+// ============================== Scene setup ==============================
 
 const canvas = document.getElementById('game-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'low-power' });
@@ -208,7 +214,7 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// ----- الأرضية (checkerboard خفيف عبر تكستشر بدل مئات المضلعات) -----
+// ----- Ground (light checkerboard via a texture instead of hundreds of polygons) -----
 
 function buildGroundTexture() {
   const size = 128;
@@ -239,7 +245,7 @@ const ground = new THREE.Mesh(
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
-// ----- السياج المحيط -----
+// ----- Surrounding fence -----
 
 const fenceGroup = new THREE.Group();
 const FENCE_POSTS = 30;
@@ -254,7 +260,7 @@ for (let i = 0; i < FENCE_POSTS; i++) {
 }
 scene.add(fenceGroup);
 
-// ----- عناصر خلفية متحركة (غيوم + طيور) -----
+// ----- Moving background elements (clouds + birds) -----
 
 function buildCloud() {
   const group = new THREE.Group();
@@ -297,17 +303,18 @@ for (let i = 0; i < 3; i++) {
   scene.add(bird);
 }
 
-// ============================== الشخصية البلوكية ==============================
+// ============================== Blocky character ==============================
 
 function hexToColor(hex, fallback) {
   if (!hex) return fallback;
   return new THREE.Color(hex);
 }
 
-/** يبني شخصية بلوكية (رأس+جسم+ذراعين+رجلين) بألوان avatar المُعطاة.
- * التركيب من الأرض للأعلى: رجلين (pivot بالورك) → جذع → ذراعين
- * (pivot بالكتف) → رأس → شعر، عشان القدمين تلمس الأرض بالضبط والأرجل/
- * الذرعان تتأرجح من مفصلها الصحيح وقت الجري بدل مركز الصندوق. */
+/** Builds a blocky character (head+torso+2 arms+2 legs) with the given
+ * avatar's colors. Assembled bottom-up: legs (hip pivot) → torso → arms
+ * (shoulder pivot) → head → hair, so the feet touch the ground exactly and
+ * the legs/arms swing from their correct joint instead of the box's center
+ * while running. */
 function buildCharacter(avatar) {
   const jacket = hexToColor(avatar?.jacket, new THREE.Color(COLORS.red));
   const skin = hexToColor(avatar?.skin, new THREE.Color(0xf2c29a));
@@ -320,7 +327,7 @@ function buildCharacter(avatar) {
   const HEAD_SIZE = 0.7;
 
   const legGeo = new THREE.BoxGeometry(0.32, 0.9, 0.32);
-  legGeo.translate(0, -0.45, 0); // pivot أعلى الساق
+  legGeo.translate(0, -0.45, 0); // pivot at the top of the leg
   const legMat = new THREE.MeshLambertMaterial({ color: 0x2c2c38 });
   const leftLeg = new THREE.Mesh(legGeo, legMat);
   leftLeg.position.set(-0.22, HIP_Y, 0);
@@ -336,7 +343,7 @@ function buildCharacter(avatar) {
   group.add(torso);
 
   const armGeo = new THREE.BoxGeometry(0.26, 0.8, 0.26);
-  armGeo.translate(0, -0.4, 0); // pivot عند الكتف
+  armGeo.translate(0, -0.4, 0); // pivot at the shoulder
   const armMat = new THREE.MeshLambertMaterial({ color: jacket });
   const leftArm = new THREE.Mesh(armGeo, armMat);
   leftArm.position.set(-0.56, SHOULDER_Y, 0);
@@ -373,7 +380,7 @@ function spawnPlayer() {
   playerParts = player.userData.parts;
 }
 
-// ============================== المنصّات (Pedestals) ==============================
+// ============================== Pedestals ==============================
 
 function drawPlateTexture(item, colorHex) {
   const size = 256;
@@ -445,7 +452,8 @@ function clearPedestals() {
   state.pedestals = [];
 }
 
-/** يوزّع منصّات المستوى الأربع بزاوية عشوائية (360°) ونصف قطر عشوائي حول اللاعب. */
+/** Distributes the level's pedestals (as many as `items` has) at a random
+ * angle (360°) and random radius around the player. */
 function layoutPedestals(items, targetItem) {
   clearPedestals();
   const count = items.length;
@@ -464,7 +472,7 @@ function layoutPedestals(items, targetItem) {
   });
 }
 
-// ============================== الاحتفال (Confetti) ==============================
+// ============================== Confetti ==============================
 
 const confettiPool = [];
 function spawnConfetti(position) {
@@ -499,7 +507,7 @@ function updateConfetti(dt) {
   }
 }
 
-// ============================== الهود (HUD) ==============================
+// ============================== HUD ==============================
 
 const heartsRowEl = document.getElementById('hearts-row');
 const progressTextEl = document.getElementById('progress-text');
@@ -533,7 +541,7 @@ function showSpeech(text, durationMs = 2600) {
   }
 }
 
-// ============================== الجويستيك ==============================
+// ============================== Joystick ==============================
 
 const joystickBase = document.getElementById('joystick-base');
 const joystickKnob = document.getElementById('joystick-knob');
@@ -584,7 +592,7 @@ function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
 }
 
-// ----- زر القفز -----
+// ----- Jump button -----
 
 const jumpBtn = document.getElementById('jump-btn');
 jumpBtn.addEventListener('pointerdown', (evt) => {
@@ -600,7 +608,7 @@ function tryJump() {
   registerActivity();
 }
 
-// ----- تفاعل اللمس المباشر على الشخصية -----
+// ----- Direct touch interaction on the character -----
 
 const raycaster = new THREE.Raycaster();
 const pointerNdc = new THREE.Vector2();
@@ -614,14 +622,14 @@ canvas.addEventListener('pointerdown', (evt) => {
   }
 });
 
-// ----- زر الخروج -----
+// ----- Exit button -----
 
 document.getElementById('exit-btn').addEventListener('pointerdown', () => {
   Bridge.audio('ui_tap');
   Bridge.send({ type: 'exit' });
 });
 
-// ============================== حركات الشخصية ==============================
+// ============================== Character animations ==============================
 
 function registerActivity() {
   state.lastMoveAt = performance.now();
@@ -650,7 +658,8 @@ function lerpAngle(a, b, t) {
   return a + (b - a) * Math.min(1, t);
 }
 
-/** حركات خمول لطيفة لما الطفل واقف بدون حركة (يلوّح، يقفز قفزة صغيرة، يستدير). */
+/** Gentle idle animations for when the child stands still (waves, a small
+ * hop, looks around). */
 function playIdleAnimation() {
   if (state.playingIdle || state.inputLocked) return;
   state.playingIdle = true;
@@ -675,7 +684,8 @@ function playIdleAnimation() {
   state.nextIdleAt = performance.now() + IDLE_DELAY_MS + Math.random() * 2000;
 }
 
-/** حركة مرحة عشوائية عند لمس الشخصية مباشرة (زي مداعبة شخصية أليفة). */
+/** A random playful animation when the character is touched directly (like
+ * petting a pet character). */
 function playRandomFunAnimation() {
   if (state.inputLocked) return;
   state.playingIdle = true;
@@ -692,7 +702,7 @@ function playRandomFunAnimation() {
   }
 }
 
-/** قفزة احتفال تلقائية عند وصول الحرف الصحيح. */
+/** Automatic celebration hop when the correct letter is reached. */
 function playCelebrationHop(onDone) {
   animateTween(700, (t) => {
     player.position.y = Math.abs(Math.sin(t * Math.PI * 1.5)) * 0.9;
@@ -700,7 +710,7 @@ function playCelebrationHop(onDone) {
   }, () => { player.position.y = 0; onDone && onDone(); });
 }
 
-/** طيحة خفيفة + رجوع بسرعة عند لمس منصّة غلط. */
+/** A light stumble + quick pushback when touching a wrong pedestal. */
 function playStumble(pushDir) {
   state.inputLocked = true;
   const startPos = player.position.clone();
@@ -719,7 +729,8 @@ function easeOutQuad(t) {
   return 1 - (1 - t) * (1 - t);
 }
 
-/** أداة عامة لتحريك قيمة عبر الزمن (بدون مكتبة tween خارجية، خفيفة). */
+/** Generic helper to animate a value over time (no external tween library,
+ * lightweight). */
 function animateTween(durationMs, onUpdate, onComplete) {
   const start = performance.now();
   function step(now) {
@@ -740,22 +751,24 @@ function clampToArena(vec3) {
   }
 }
 
-// ============================== منطق الجولة (Round) ==============================
+// ============================== Round logic ==============================
 
 function startLevel() {
   state.hearts = HEART_START;
   state.roundIndex = clamp(config.resumeAt || 0, 0, config.items.length - 1);
   renderHearts();
   spawnPlayer();
-  // ترحيب باسم الطفل الحقيقي مرة وحدة ببداية المستوى (النص المكتوب فقط —
-  // الصوت المسجّل يستخدم "يا بطل" عام بدل الاسم، راجعي قسم "تخصيص اسم
-  // الطفل" بالبرومت الأصلي).
+  // Welcome the child by their real name once at the start of the level
+  // (text only — the recorded audio uses a generic "hero" address instead
+  // of the name, see the "child name personalization" section of the
+  // original prompt).
   if (state.roundIndex === 0) {
     showSpeech(`هيّا يا ${config.childName}! هل أنت مستعدّ للّعب؟ 🎮`, 2200);
-    Bridge.audio('level_intro'); // بدون symbol = ترحيب عام، مو تعريف عنصر.
+    Bridge.audio('level_intro'); // no symbol = generic welcome, not an item intro.
   }
-  // مهلة أطول أول جولة عشان صوت الترحيب ياخذ وقته كامل قبل ما يبدأ صوت
-  // الجولة الأولى (وإلا ينقطع أو يتداخل معه).
+  // Longer delay on the first round so the welcome audio has time to finish
+  // before the first round's audio starts (otherwise it gets cut off or
+  // overlaps).
   setTimeout(beginRound, state.roundIndex === 0 ? 3400 : 0);
 }
 
@@ -784,12 +797,14 @@ function beginRound() {
 function handleCorrectTouch(pedestal) {
   state.roundActive = false;
   spawnConfetti(pedestal.mesh.position.clone().add(new THREE.Vector3(0, 1.8, 0)));
-  // "وجدنا حرف الألف! الألف! الألف! الألف!" — تكرار 3 مرات بالصوت عشان
-  // يرسخ بذاكرة الطفل (طلب صريح)، بدل التشجيع العام بس.
+  // "We found the letter Alef! Alef! Alef! Alef!" — repeated 3 times in
+  // audio so it sticks in the child's memory (explicit request), instead of
+  // generic praise alone.
   showSpeech(`${pickPraise()} وجدنا ${pedestal.item.symbol}! 🎉`, 3600);
   Bridge.audio('found_answer', { symbol: pedestal.item.symbol });
   playCelebrationHop(() => {
-    // مهلة إضافية قبل الجولة الجاية عشان صوت التكرار ياخذ وقته (~4 ثواني).
+    // Extra delay before the next round so the repeated-name audio has time
+    // to finish (~4 seconds).
     setTimeout(() => {
       state.roundIndex += 1;
       if (state.roundIndex >= config.items.length) {
@@ -814,8 +829,8 @@ function handleWrongTouch(pedestal) {
 
   if (state.hearts <= 0) {
     state.roundActive = false;
-    // مهلة قصيرة عشان الطفل يشوف الطيحة والرسالة الودّية قبل ما ننتقل
-    // لشاشة "حاول مرة ثانية" (بدل قطع مفاجئ للانيميشن).
+    // Short delay so the child sees the stumble and friendly message before
+    // we move to the "try again" screen (instead of an abrupt animation cut).
     setTimeout(() => finishLevel(false), 900);
   }
 }
@@ -841,9 +856,10 @@ function finishLevel(didWin) {
     Bridge.send({ type: 'result', outcome: 'retry', roundIndex: state.roundIndex });
   }
 
-  // بوضع الاختبار المباشر بالمتصفح (بدون Flutter) ما فيه أحد يستقبل رسالة
-  // النتيجة أعلاه ويعرض شاشة فوز/خسارة — نعرض بديل بسيط بنفس الصفحة
-  // بدل ما تحس التجربة "توقفت" بدون تفسير.
+  // In standalone browser test mode (no Flutter) nobody receives the result
+  // message above to show a win/loss screen — we show a simple fallback on
+  // the same page instead of the experience feeling like it "just stopped"
+  // with no explanation.
   if (!hasBridge()) showDemoResult(didWin);
 }
 
@@ -878,7 +894,7 @@ function showDemoResult(didWin) {
   veil.classList.remove('hidden');
 }
 
-// ----- تذكير دوري كل 5 ثواني: يتبادل بين تكرار الحرف وتلميح الاتجاه -----
+// ----- Periodic reminder: alternates between repeating the letter and a direction hint -----
 
 function maybeRemind(now) {
   if (!state.roundActive || state.inputLocked) return;
@@ -886,8 +902,9 @@ function maybeRemind(now) {
   state.lastHintAt = now;
   state.reminderCount += 1;
 
-  // تذكير فردي = تكرار الحرف/الرقم نفسه صوتياً بس (تعزيز للحفظ، بدون
-  // فقاعة كلام عشان ما تكون مشتّتة بصرياً)، زوجي = تلميح اتجاه (نص + صوت).
+  // Odd reminder = repeat the letter/number by voice only (memory
+  // reinforcement, without a speech bubble so it's not visually
+  // distracting); even reminder = direction hint (icon + audio).
   if (state.reminderCount % 2 === 1) {
     Bridge.audio('level_intro', { symbol: state.target.symbol });
     return;
@@ -904,15 +921,17 @@ function giveDirectionHint() {
   if (toTarget.lengthSq() < 0.01) return;
   toTarget.normalize();
 
-  // مهم: التلميح لازم يكون نسبة للشاشة/الكاميرا الثابتة (نفس نظام
-  // الجويستيك: "قدام" = عالمياً -Z دائماً)، مو نسبة لاتجاه وجه الشخصية
-  // (rotation.y يتغيّر كل ما تلف) — وإلا يصير التلميح معكوس كل ما الشخصية
-  // ملفوفة بغير اتجاهها الأصلي (كان بق حقيقي هنا، تم تصحيحه).
+  // Important: the hint must be relative to the fixed screen/camera frame
+  // (same system as the joystick controls: "forward" = world -Z always),
+  // not relative to the character's facing direction (rotation.y changes
+  // every time it turns) — otherwise the hint ends up reversed whenever the
+  // character is turned away from its original direction (was a real bug
+  // here, now fixed).
   const screenForward = new THREE.Vector3(0, 0, -1);
   const angle = signedAngleBetween(screenForward, toTarget);
 
-  // 4 أرباع متساوية (90° لكل وحدة) بدل 3 غير متساوية — تضيف "خلف" كاتجاه
-  // رابع (طلب صريح).
+  // 4 equal quadrants (90° each) instead of 3 unequal ones — adds "behind"
+  // as a 4th direction (explicit request).
   const ARROW_BY_DIRECTION = { ahead: '⬆️', right: '➡️', behind: '⬇️', left: '⬅️' };
   let direction;
   if (Math.abs(angle) < Math.PI / 4) {
@@ -924,8 +943,8 @@ function giveDirectionHint() {
   } else {
     direction = 'left';
   }
-  // أيقونة سهم صغيرة بس (مو فقاعة كلام كبيرة تسد الشاشة) — الصوت يفضل
-  // يشتغل كامل زي المعتاد.
+  // Small arrow icon only (not a big speech bubble blocking the screen) —
+  // the audio still plays in full as usual.
   showDirectionArrow(ARROW_BY_DIRECTION[direction]);
   Bridge.audio('hint_direction', { direction });
 }
@@ -945,7 +964,7 @@ function signedAngleBetween(a, b) {
   return Math.atan2(cross, dot);
 }
 
-// ============================== الحلقة الرئيسية (Update Loop) ==============================
+// ============================== Main update loop ==============================
 
 const clock = new THREE.Clock();
 
@@ -953,7 +972,7 @@ function update() {
   const dt = Math.min(clock.getDelta(), 0.05);
   const now = performance.now();
 
-  // حركة اللاعب
+  // Player movement
   const moving = !state.inputLocked && moveVector.length() > 0.08;
   if (moving) {
     registerActivity();
@@ -970,7 +989,7 @@ function update() {
   }
   animateLocomotion(dt, moving);
 
-  // القفز
+  // Jumping
   if (state.isJumping) {
     state.velocityY -= GRAVITY * dt;
     player.position.y += state.velocityY * dt;
@@ -981,19 +1000,19 @@ function update() {
     }
   }
 
-  // خمول
+  // Idle
   if (!moving && !state.isJumping && !state.playingIdle && !state.inputLocked && now > state.nextIdleAt) {
     playIdleAnimation();
   }
 
-  // بوبينج المنصّات + دوران اللوحة نحو الكاميرا
+  // Pedestal bobbing + plate rotation to face the camera
   for (const p of state.pedestals) {
     const plate = p.mesh.userData.plate;
     plate.position.y = 1.85 + Math.sin(now * 0.002 + p.mesh.userData.bobOffset) * 0.08;
     plate.lookAt(camera.position.x, p.mesh.position.y + plate.position.y, camera.position.z);
   }
 
-  // فحص التصادم بالمنصّات (أفقياً بس — عشان القفز ما "يتفادى" لمس المنصّة)
+  // Pedestal collision check (horizontal only — so jumping doesn't "dodge" touching a pedestal)
   if (state.roundActive && !state.inputLocked && now > state.invulnerableUntil) {
     for (const p of state.pedestals) {
       const dx = player.position.x - p.mesh.position.x;
@@ -1009,7 +1028,7 @@ function update() {
 
   maybeRemind(now);
 
-  // خلفية متحركة
+  // Moving background
   for (const cloud of clouds) {
     cloud.position.x += cloud.userData.speed * dt;
     if (cloud.position.x > 30) cloud.position.x = -30;
@@ -1022,7 +1041,7 @@ function update() {
 
   updateConfetti(dt);
 
-  // كاميرا تتبع اللاعب
+  // Camera follows the player
   const desiredCamPos = player.position.clone().add(CAMERA_OFFSET);
   camera.position.lerp(desiredCamPos, 1 - Math.pow(0.001, dt));
   const lookTarget = player.position.clone().add(new THREE.Vector3(0, 1.2, 0));
@@ -1038,7 +1057,7 @@ function lerpAngleShortest(a, b, t) {
   return a + diff * Math.min(1, t);
 }
 
-// ============================== التهيئة ==============================
+// ============================== Bootstrapping ==============================
 
 async function loadFonts() {
   try {
@@ -1047,7 +1066,8 @@ async function loadFonts() {
     const loaded = await Promise.all([arabic.load(), latin.load()]);
     loaded.forEach((f) => document.fonts.add(f));
   } catch (err) {
-    // خط النظام الافتراضي يكفي لو فشل التحميل — ما يوقف اللعبة.
+    // The default system font is good enough if loading fails — doesn't
+    // stop the game.
     // eslint-disable-next-line no-console
     console.warn('font load failed', err);
   }
@@ -1078,10 +1098,11 @@ function normalizeConfig(cfg) {
   };
 }
 
-// ============================== مجموعات ومستويات وضع الاختبار ==============================
-// بدون Flutter ما فيه ContentRepository.levelsFor — نفس المحتوى والتقسيم
-// (4 عناصر بالمستوى) مكرّر هنا عشان تقدرين تختبرين كل الحروف/الأرقام
-// (عربي وإنجليزي) بالمتصفح. راجعي lib/data/content_repository.dart للمصدر.
+// ============================== Test-mode groups and levels ==============================
+// Without Flutter there's no ContentRepository.levelsFor — the same content
+// and grouping (4 items per level) is duplicated here so you can test all
+// letters/numbers (Arabic and English) in the browser. See
+// lib/data/content_repository.dart for the source of truth.
 function chunk4(items) {
   const levels = [];
   for (let i = 0; i < items.length; i += 4) levels.push(items.slice(i, i + 4));
@@ -1141,8 +1162,8 @@ function currentDemoLevels() {
   return DEMO_GROUPS[demoGroup];
 }
 
-/** يبدأ مستوى/مجموعة محدّدة بنفس اسم/شخصية الطفل المحفوظة (بدون رجوع
- * لمقدّمة الاسم/الشخصية من جديد). */
+/** Starts a specific level/group using the same saved child name/avatar
+ * (without going back through the name/avatar intro). */
 function startDemoLevel(group, levelIndex) {
   demoGroup = group;
   const levels = currentDemoLevels();
@@ -1152,10 +1173,11 @@ function startDemoLevel(group, levelIndex) {
   window.HamoudiGame.init({ childName: demoChildName, avatar: demoAvatar });
 }
 
-// ============================== مقدّمة وضع الاختبار (اسم + شخصية) ==============================
-// نفس 6 شخصيات lib/models/avatar_option.dart (kAvatarOptions) — مكرّرة
-// هنا لأن هذا جافاسكربت مستقل عن كود Flutter. عدّلي القيمتين مع بعض لو
-// أضفتِ/غيّرتِ شخصية بالتطبيق.
+// ============================== Test-mode prologue (name + avatar) ==============================
+// Mirrors the same 6 characters from lib/models/avatar_option.dart
+// (kAvatarOptions) — duplicated here because this JavaScript is standalone
+// from the Flutter code. Keep the two in sync if you add/change a character
+// in the app.
 const DEMO_AVATARS = [
   { id: 'red_jacket', jacket: '#e2231a', skin: '#f2c29a', hair: '#2b1b12' },
   { id: 'blue_jacket', jacket: '#2e86ff', skin: '#e8ad7c', hair: '#1a1a1a' },
@@ -1165,8 +1187,9 @@ const DEMO_AVATARS = [
   { id: 'orange_jacket', jacket: '#ff8a3d', skin: '#e8ad7c', hair: '#b8860b' },
 ];
 
-/** بطاقة داكنة فيها معاينة 3D حيّة للشخصية تدور ببطء — نفس buildCharacter()
- * المستخدمة باللعب الفعلي، بس بمشهد Three.js صغير مستقل لكل بطاقة. */
+/** A dark card with a live rotating 3D preview of the character — reuses
+ * the same buildCharacter() used in actual gameplay, but with its own small
+ * independent Three.js scene per card. */
 function createAvatarPreview(container, avatar) {
   const canvas = document.createElement('canvas');
   container.appendChild(canvas);
@@ -1244,8 +1267,9 @@ function setupPrologue() {
   prologueEl.classList.remove('hidden');
 }
 
-/** أزرار صغيرة أعلى الشاشة تنقل مباشرة لأول مستوى بأي مجموعة (حروف/أرقام
- * عربي/إنجليزي) — أداة اختبار بس، ما تظهر جوا التطبيق الحقيقي. */
+/** Small buttons at the top of the screen that jump straight to the first
+ * level of any group (Arabic/English letters/numbers) — a test tool only,
+ * doesn't appear inside the real app. */
 function setupGroupSwitcher() {
   const bar = document.getElementById('demo-group-switcher');
   if (bar.childElementCount > 0) {
@@ -1274,10 +1298,10 @@ function updateGroupSwitcherActive() {
 (async function boot() {
   await loadFonts();
   Bridge.send({ type: 'ready' });
-  // وضع تجربة مستقل بالمتصفح (بدون Flutter) — أضيفي ?demo=1 بالرابط.
-  // نعرض مقدّمة بسيطة (اسم + شخصية) أول شي بدل ما نقفز مباشرة لعالم
-  // اللعب، عشان تجربة الاختبار تحاكي "تسجيل الدخول → اختيار الشخصية →
-  // اللعب" اللي بالتطبيق الحقيقي.
+  // Standalone browser test experience (no Flutter) — add ?demo=1 to the
+  // URL. We show a simple intro (name + avatar) first instead of jumping
+  // straight into the game world, so the test experience mirrors the real
+  // app's "login → pick a character → play" flow.
   if (window.location.search.includes('demo=1') && !hasBridge()) {
     setupPrologue();
   }

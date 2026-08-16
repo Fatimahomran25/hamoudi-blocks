@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../services/audio_service.dart';
 import '../theme/app_theme.dart';
 
-/// زر كبير (≥60px ارتفاع) بحدود سوداء غليظة وظل صندوقي — للمس، لا كيبورد.
-/// يهتز/يصدر صوت لمسة عند الضغط عشان يحس الطفل باستجابة فورية.
+/// A big button (≥60px tall) with thick black borders and a box shadow —
+/// touch-first, no keyboard. Vibrates/plays a tap sound on press so the
+/// child feels immediate feedback.
 class BigButton extends StatelessWidget {
   const BigButton({
     super.key,

@@ -13,15 +13,16 @@ import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import 'level_result_screen.dart';
 
-/// شاشة عالم اللعب ثلاثي الأبعاد الحقيقي (Milestone 2): WebView محلي
-/// (بدون أي اتصال إنترنت) يعرض عالم Three.js المبني بـ assets/game3d/ —
-/// شخصية بلوكية، جويستيك لمسي، قفز، منصّات موزعة 360°، قلوب، تلميح اتجاه.
+/// The real 3D game world screen (Milestone 2): a local WebView (no
+/// internet connection needed) showing the Three.js world built in
+/// assets/game3d/ — a blocky character, a touch joystick, jumping,
+/// pedestals scattered at 360°, hearts, direction hints.
 ///
-/// جسر التواصل مع الصفحة عبر JavaScript Channel اسمه "GameChannel"
-/// (تفاصيل كل رسالة موثّقة أعلى assets/game3d/game.js):
-///   الصفحة → هنا: {type:'ready'} ثم {type:'audio', event, symbol?, direction?}
-///            و {type:'result', outcome:'win'|'retry', ...} و {type:'exit'}.
-///   هنا → الصفحة: window.HamoudiGame.init(config) بعد استقبال 'ready'.
+/// Bridge to the page over a JavaScript Channel named "GameChannel" (each
+/// message is documented at the top of assets/game3d/game.js):
+///   page → here: {type:'ready'} then {type:'audio', event, symbol?, direction?}
+///          and {type:'result', outcome:'win'|'retry', ...} and {type:'exit'}.
+///   here → page: window.HamoudiGame.init(config) after receiving 'ready'.
 class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
@@ -35,10 +36,11 @@ class GameScreen extends StatefulWidget {
   final ContentGroup group;
   final int levelIndex;
 
-  /// أي عنصر بالمستوى (0-3) نبدأ منه. القيمة الافتراضية 0 (بداية مستوى
-  /// جديدة). لما نرجع بعد "حاول مرة ثانية" نمرر نفس رقم الجولة اللي خلصت
-  /// فيها القلوب، عشان "المستوى لا يرجع للخلف — فقط إعادة نفس السؤال"
-  /// (راجعي قسم "نظام الفوز والخسارة" بالبرومت الأصلي).
+  /// Which item in the level (0-3) to start from. Defaults to 0 (a fresh
+  /// level start). When returning after "try again" we pass the same round
+  /// index where hearts ran out, so "the level doesn't restart — it just
+  /// repeats the same question" (see the "win/loss system" section of the
+  /// original prompt).
   final int startRoundIndex;
 
   @override
@@ -49,9 +51,10 @@ class _GameScreenState extends State<GameScreen> {
   late final WebViewController _controller;
   bool _handledResult = false;
 
-  /// تحويل مفاتيح رسائل الصوت القادمة من الجسر لـ [GameAudioEvent] المطابق.
-  /// 'level_intro' و'hint_direction' مستثناة عمداً لأنها تحتاج معالجة
-  /// خاصة (رمز العنصر أو الاتجاه) — راجعي [_handleAudioEvent].
+  /// Maps audio message keys coming from the bridge to the matching
+  /// [GameAudioEvent]. 'level_intro' and 'hint_direction' are deliberately
+  /// excluded since they need special handling (the item's symbol or the
+  /// direction) — see [_handleAudioEvent].
   static const Map<String, GameAudioEvent> _audioEventMap = {
     'ui_tap': GameAudioEvent.buttonTap,
     'correct_answer': GameAudioEvent.correctAnswer,
@@ -76,7 +79,7 @@ class _GameScreenState extends State<GameScreen> {
     try {
       data = jsonDecode(message.message) as Map<String, dynamic>;
     } catch (_) {
-      return; // رسالة غير متوقعة — نتجاهلها بأمان بدل ما نكسر الشاشة.
+      return; // Unexpected message — ignore it safely instead of crashing the screen.
     }
 
     switch (data['type']) {
@@ -99,8 +102,9 @@ class _GameScreenState extends State<GameScreen> {
     final event = data['event'] as String?;
     switch (event) {
       case 'level_intro':
-        // مع رمز = تعريف عنصر تعليمي محدد (بداية جولة)؛ بدون رمز = ترحيب
-        // عام ببداية الجلسة (راجعي startLevel() بـ assets/game3d/game.js).
+        // With a symbol = a specific learning item's intro (start of a
+        // round); without a symbol = a general session welcome (see
+        // startLevel() in assets/game3d/game.js).
         final symbol = data['symbol'] as String?;
         if (symbol != null) {
           AudioService.instance.playContentIntro(symbol);
@@ -112,8 +116,8 @@ class _GameScreenState extends State<GameScreen> {
         AudioService.instance.playHintDirection(data['direction'] as String? ?? 'ahead');
         break;
       case 'found_answer':
-        // احتفال بتكرار الحرف/الرقم 3 مرات — يحتاج الرمز نفسه، راجعي
-        // AudioService.playFoundContent.
+        // Celebration repeating the letter/number 3 times — needs the
+        // symbol itself, see AudioService.playFoundContent.
         final symbol = data['symbol'] as String?;
         if (symbol != null) AudioService.instance.playFoundContent(symbol);
         break;
@@ -123,9 +127,10 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  /// عناصر المستوى العادية (4) + نقاط ضعف الطفل المحدّدة بنفس المجموعة
-  /// (لو موجودة) كجولات إضافية بالآخر — راجعي "نقاط ضعف الطفل" بشاشة
-  /// WeakPointsScreen. العناصر المكرّرة (موجودة أصلاً بالمستوى) ما تتكرر.
+  /// The level's regular items (4) + the child's marked weak points in the
+  /// same group (if any) as extra bonus rounds at the end — see "Child's
+  /// Weak Points" in WeakPointsScreen. Duplicate items (already in the
+  /// level) aren't repeated.
   List<ContentItem> _buildRoundItems(ChildProfile child) {
     final levelItems = ContentRepository.levelsFor(widget.group)[widget.levelIndex];
     final weakSymbols = child.weakSymbolsFor(widget.group);

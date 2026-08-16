@@ -4,7 +4,8 @@ import '../../theme/app_theme.dart';
 import '../../widgets/big_button.dart';
 import 'avatar_select_screen.dart';
 
-/// شاشة "إضافة طفل": اسم الطفل فقط (تكتبه الوالدة)، بعدها اختيار الشخصية.
+/// The "add a child" screen: just the child's name (the parent types it),
+/// then character selection.
 class AddChildScreen extends StatefulWidget {
   const AddChildScreen({super.key});
 

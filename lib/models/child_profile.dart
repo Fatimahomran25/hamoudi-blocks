@@ -1,7 +1,8 @@
 import 'content_item.dart';
 
-/// بروفايل طفل واحد مرتبط بحساب الوالد. يُخزَّن محلياً الآن (Milestone 1)
-/// وسيُزامَن مع Firestore لاحقاً (Milestone 4) بدون تغيير هذا الشكل.
+/// A single child's profile linked to a parent's account. Stored locally
+/// for now (Milestone 1) and will sync with Firestore later (Milestone 4)
+/// without changing this shape.
 class ChildProfile {
   ChildProfile({
     required this.id,
@@ -17,14 +18,15 @@ class ChildProfile {
   String name;
   String avatarId;
 
-  /// مفتاح المستوى بصيغة "group_index" (مثلاً "arabicLetters_0")
-  /// وقيمته عدد النجوم المكتسبة (0-4). غياب المفتاح = المستوى لم يُلعب بعد.
+  /// Level key in the form "group_index" (e.g. "arabicLetters_0") with the
+  /// number of stars earned (0-4) as its value. A missing key means the
+  /// level hasn't been played yet.
   final Map<String, int> starsByLevelKey;
 
-  /// عناصر (حرف/رقم) حدّدها الوالدين كنقاط ضعف — بصيغة "group_symbol"
-  /// (مثلاً "arabicLetters_أ"). تُضاف كجولات إضافية بآخر كل مستوى قادم
-  /// بنفس المجموعة لحد ما الوالدين يشيلونها (راجعي شاشة نقاط الضعف
-  /// وGameScreen._buildRoundItems).
+  /// Items (letters/numbers) the parent marked as weak points — in the form
+  /// "group_symbol" (e.g. "arabicLetters_أ"). Added as bonus rounds at the
+  /// end of every future level in the same group until the parent removes
+  /// them (see the weak points screen and GameScreen._buildRoundItems).
   final Set<String> weakItemKeys;
 
   bool soundEnabled;
@@ -35,8 +37,8 @@ class ChildProfile {
   int starsFor(ContentGroup group, int levelIndex) =>
       starsByLevelKey[levelKey(group, levelIndex)] ?? 0;
 
-  /// المستوى الأول دايماً مفتوح؛ أي مستوى بعده يفتح إذا اللي قبله فيه نجمة
-  /// وحدة على الأقل (يعني اكتمل).
+  /// The first level is always unlocked; any level after it unlocks once
+  /// the one before it has at least one star (i.e. completed).
   bool isLevelUnlocked(ContentGroup group, int levelIndex) {
     if (levelIndex == 0) return true;
     return starsFor(group, levelIndex - 1) > 0;
@@ -45,12 +47,13 @@ class ChildProfile {
   void setStars(ContentGroup group, int levelIndex, int stars) {
     final key = levelKey(group, levelIndex);
     final current = starsByLevelKey[key] ?? 0;
-    // نحتفظ بأعلى نتيجة حققها الطفل، ما ننزّلها لو حاول مرة ثانية وقصّر.
+    // We keep the child's best score, never lowering it if they try again and do worse.
     starsByLevelKey[key] = stars > current ? stars : current;
   }
 
-  /// يمسح تقدم مجموعة كاملة (كل النجوم) — تُقفل كل مستوياتها إلا الأول
-  /// من جديد. لا يمسح نقاط الضعف المحدّدة (ميزة مستقلة).
+  /// Clears an entire group's progress (all stars) — locks all its levels
+  /// except the first one again. Doesn't clear marked weak points (a
+  /// separate, independent feature).
   void resetProgress(ContentGroup group) {
     starsByLevelKey.removeWhere((key, _) => key.startsWith('${group.name}_'));
   }
@@ -69,7 +72,8 @@ class ChildProfile {
     }
   }
 
-  /// رموز نقاط الضعف المحدّدة لمجموعة معيّنة (بدون بادئة اسم المجموعة).
+  /// Symbols marked as weak points for a given group (without the group
+  /// name prefix).
   List<String> weakSymbolsFor(ContentGroup group) {
     final prefix = '${group.name}_';
     return weakItemKeys

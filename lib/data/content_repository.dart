@@ -1,9 +1,10 @@
 import '../models/content_item.dart';
 
-/// كل محتوى اللعبة التعليمي: 28 حرف عربي + 26 حرف إنجليزي + 10 أرقام عربية
-/// + 10 أرقام إنجليزية. كل عنصر [الرمز, كلمة المثال, إيموجي].
-/// (بعض الأزواج كلمة/إيموجي تقريبية لعدم وجود إيموجي مطابق 100% باليونيكود
-/// — سهل تبديلها لاحقاً من هالملف وحده بدون لمس بقية الكود.)
+/// All the game's educational content: 28 Arabic letters + 26 English
+/// letters + 10 Arabic numbers + 10 English numbers. Each item is
+/// [symbol, example word, emoji]. (Some word/emoji pairs are approximate
+/// since Unicode doesn't have a 100% matching emoji — easy to swap later
+/// from this file alone without touching the rest of the code.)
 class ContentRepository {
   ContentRepository._();
 
@@ -106,8 +107,9 @@ class ContentRepository {
     }
   }
 
-  /// يقسّم مجموعة كاملة لمستويات، كل مستوى 4 عناصر بالترتيب
-  /// (آخر مستوى قد يكون أقل من 4 لو العدد الكلي غير قابل للقسمة على 4).
+  /// Splits an entire group into levels, 4 items per level in order (the
+  /// last level may have fewer than 4 if the total count isn't divisible
+  /// by 4).
   static List<List<ContentItem>> levelsFor(ContentGroup group) {
     final items = forGroup(group);
     const perLevel = ContentGroupInfo.itemsPerLevel;

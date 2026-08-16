@@ -11,8 +11,9 @@ import '../settings/voice_settings_screen.dart';
 import '../settings/weak_points_screen.dart';
 import 'main_menu_screen.dart';
 
-/// شاشة "دخول اللعبة": هذي أول شي يشوفه الطفل عند فتح التطبيق بعد أول
-/// إعداد — بروفايله جاهز (اسمه + شخصيته)، بدون ما يكتب أو يقرأ أي شي.
+/// The "game login" screen: the first thing the child sees when opening
+/// the app after the initial setup — their profile is ready (name +
+/// character), without them typing or reading anything.
 class GameLoginScreen extends StatelessWidget {
   const GameLoginScreen({super.key, required this.childId});
 
@@ -29,8 +30,9 @@ class GameLoginScreen extends StatelessWidget {
 
     return Scaffold(
       body: SafeArea(
-        // ResponsiveCenter بدل Column مباشر: تتمركز عادي بوضع الطول، وتصير
-        // قابلة للتمرير بدل ما تنقص/تتقصّ بوضع العرض (كان بق حقيقي هنا).
+        // ResponsiveCenter instead of a plain Column: centers normally in
+        // portrait, and becomes scrollable instead of clipping in
+        // landscape (was a real bug here).
         child: ResponsiveCenter(
           children: [
             Align(

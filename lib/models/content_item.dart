@@ -1,6 +1,7 @@
-/// عنصر تعليمي واحد: حرف أو رقم + كلمة مثال + إيموجي.
-/// [symbol] هو الحرف/الرقم نفسه، [exampleWord] كلمة المثال المنطوقة،
-/// [emoji] رمز بصري يفهمه الطفل بدون قراءة.
+/// A single learning item: a letter or number + an example word + an emoji.
+/// [symbol] is the letter/number itself, [exampleWord] is the spoken
+/// example word, [emoji] is a visual cue the child understands without
+/// reading.
 class ContentItem {
   const ContentItem(this.symbol, this.exampleWord, this.emoji);
 
@@ -9,7 +10,7 @@ class ContentItem {
   final String emoji;
 }
 
-/// المجموعات الأربع اللي تدور حولها اللعبة كلها.
+/// The four groups the entire game revolves around.
 enum ContentGroup {
   arabicLetters,
   englishLetters,
@@ -42,6 +43,6 @@ extension ContentGroupInfo on ContentGroup {
     }
   }
 
-  /// عدد العناصر بكل مستوى (ثابت حسب البرومت: 4 عناصر/مستوى).
+  /// Items per level (fixed per the original prompt: 4 items/level).
   static const int itemsPerLevel = 4;
 }

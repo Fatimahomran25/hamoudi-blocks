@@ -7,11 +7,13 @@ import 'package:uuid/uuid.dart';
 import '../models/child_profile.dart';
 import '../models/content_item.dart';
 
-/// يدير قائمة بروفايلات الأطفال + الطفل النشط حالياً + تقدمه بكل مستوى.
+/// Manages the list of child profiles + the currently active child + their
+/// progress in each level.
 ///
-/// محلي بالكامل الآن (Milestone 1). بـ Milestone 4 تُضاف مزامنة اختيارية
-/// مع Firestore فوق نفس الطبقة (نفس الميثودز بالضبط، فباقي الشاشات ما
-/// تحتاج أي تعديل — فقط يصير هنا استدعاء إضافي لحفظ/قراءة سحابية).
+/// Fully local for now (Milestone 1). In Milestone 4, optional Firestore
+/// sync is added on top of this same layer (the exact same methods, so the
+/// rest of the screens need no changes — just an extra cloud save/read call
+/// added here).
 class ProfileService extends ChangeNotifier {
   static const _kChildrenKey = 'children_profiles';
   static const _kActiveChildKey = 'active_child_id';
@@ -103,7 +105,7 @@ class ProfileService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// يفعّل/يعطّل علامة "نقطة ضعف" على عنصر (حرف/رقم) — راجعي
+  /// Toggles the "weak point" flag on an item (letter/number) — see
   /// lib/screens/settings/weak_points_screen.dart.
   Future<void> setWeakItem({
     required String childId,
@@ -117,7 +119,7 @@ class ProfileService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// يمسح تقدم مجموعة كاملة (كل النجوم، تُقفل كل المستويات إلا الأول).
+  /// Clears an entire group's progress (all stars, locking every level except the first).
   Future<void> resetGroupProgress({
     required String childId,
     required ContentGroup group,

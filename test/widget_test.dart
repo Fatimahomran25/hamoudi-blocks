@@ -1,5 +1,5 @@
-// اختبار دخان بسيط: يتأكد إن التطبيق يبني بدون Exception ويوصل لأول شاشة
-// (تسجيل دخول الوالد) بحالة "لا حساب محفوظ".
+// A simple smoke test: confirms the app builds without an exception and
+// reaches the first screen (parent sign-in) in the "no saved account" state.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

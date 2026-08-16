@@ -8,8 +8,9 @@ import '../../widgets/big_button.dart';
 import '../../widgets/blocky_avatar.dart';
 import '../home/game_login_screen.dart';
 
-/// اختيار شخصية الطفل من 4-6 خيارات جاهزة، مع معاينة حية متحركة.
-/// يُستدعى أول مرة بعد إضافة الطفل، وأيضاً متاح لاحقاً من الإعدادات.
+/// Picking the child's character from 4-6 ready-made options, with a live
+/// animated preview. Shown the first time right after adding the child,
+/// and also reachable later from settings.
 class AvatarSelectScreen extends StatefulWidget {
   const AvatarSelectScreen({super.key, required this.childName});
 

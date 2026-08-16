@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// هوية بصرية "بلوك حمودي": عالم بلوكي بألوان صريحة، حدود سوداء غليظة،
-/// وظل صندوقي (بدون تمويه) بدل الظل الناعم — بروح شاشات ألعاب Roblox
-/// لكن بتصميم أصلي مستقل (راجعي قسم "الشعار والاسم" بالبرومت الأصلي).
+/// "Hamoudi Blocks" visual identity: a blocky world with bold colors,
+/// thick black borders, and a hard box shadow (no blur) instead of a soft
+/// one — an original, independent design (see the "logo and name" section
+/// of the original prompt).
 class AppColors {
   AppColors._();
 
@@ -26,7 +27,7 @@ class AppColors {
 class AppTheme {
   AppTheme._();
 
-  /// خط دائري كرتوني سميك يدعم عربي وإنجليزي بنفس الشكل.
+  /// A thick, rounded cartoon font that supports both Arabic and English in the same style.
   static TextTheme _textTheme(TextTheme base) {
     return GoogleFonts.balooBhaijaan2TextTheme(base).apply(
       bodyColor: AppColors.textLight,
@@ -54,8 +55,8 @@ class AppTheme {
   }
 }
 
-/// حدود سوداء غليظة + ظل صندوقي صريح (بدون تمويه) — العنصر البصري
-/// المتكرر بكل بطاقة وزر بالتطبيق.
+/// Thick black borders + a bold box shadow (no blur) — the recurring
+/// visual element on every card and button in the app.
 class NeoBox extends StatelessWidget {
   const NeoBox({
     super.key,

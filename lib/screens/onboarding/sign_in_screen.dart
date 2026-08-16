@@ -6,9 +6,10 @@ import '../../theme/app_theme.dart';
 import '../../widgets/big_button.dart';
 import '../onboarding/add_child_screen.dart';
 
-/// شاشة حساب الوالد لمرة وحدة: إنشاء حساب أو تسجيل دخول (إيميل/باسورد).
-/// هذي الشاشة الوحيدة اللي يستخدمها الوالد مباشرة — الطفل ما يشوفها أبداً
-/// بعد الإعداد الأول (الجلسة تُتذكّر تلقائياً).
+/// The one-time parent account screen: create an account or sign in
+/// (email/password). This is the only screen the parent uses directly —
+/// the child never sees it after the initial setup (the session is
+/// remembered automatically).
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
 

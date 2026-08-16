@@ -4,9 +4,10 @@ import 'package:provider/provider.dart';
 import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 
-/// إعدادات الصوت. بحسب قسم "جودة الصوت" بالبرومت الأصلي، القرار المعتمد
-/// هو أصوات مسجّلة مسبقاً (مو TTS حي، راجعي lib/services/audio_service.dart)
-/// — فقط تشغيل/إيقاف الصوت بشكل عام هنا، ما فيه اختيار "صوت الجهاز".
+/// Voice settings. Per the "audio quality" section of the original prompt,
+/// the chosen approach is pre-recorded audio (not live TTS, see
+/// lib/services/audio_service.dart) — this screen is just a general sound
+/// on/off toggle, there's no "device voice" picker.
 class VoiceSettingsScreen extends StatelessWidget {
   const VoiceSettingsScreen({super.key, required this.childId});
 

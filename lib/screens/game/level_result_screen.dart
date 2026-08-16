@@ -10,9 +10,9 @@ import '../../widgets/star_row.dart';
 import '../home/levels_screen.dart';
 import 'game_screen.dart';
 
-/// شاشة إنهاء المستوى: فوز (تهنئة + نجوم) أو "حاول مرة ثانية" (بدون قفل
-/// رجوع للخلف — فقط إعادة نفس العنصر بقلوب جديدة). لا يوجد "Game Over"
-/// نهائي بهالتصميم أبداً.
+/// The level-end screen: a win (congratulations + stars) or "try again"
+/// (no lockout, no going backward — just repeat the same item with fresh
+/// hearts). There is never a final "Game Over" in this design.
 class LevelResultScreen extends StatefulWidget {
   const LevelResultScreen({
     super.key,
@@ -29,12 +29,13 @@ class LevelResultScreen extends StatefulWidget {
   final int levelIndex;
   final bool didWin;
 
-  /// عدد القلوب المتبقية عند الفوز (1-3) — يحدد عدد النجوم:
-  /// 3 قلوب=4 نجوم، قلبين=3 نجوم، قلب وحد=نجمتين.
+  /// Hearts remaining on a win (1-3) — determines the star count: 3
+  /// hearts=4 stars, 2 hearts=3 stars, 1 heart=2 stars.
   final int heartsRemaining;
 
-  /// (عند didWin=false بس) رقم العنصر (0-3) اللي خلصت فيه القلوب — يُمرَّر
-  /// لزر "حاول مرة ثانية" عشان نستأنف نفس السؤال بدل إعادة المستوى كامل.
+  /// (Only when didWin=false) the item index (0-3) where hearts ran out —
+  /// passed to the "try again" button so we resume the same question
+  /// instead of restarting the whole level.
   final int resumeRoundIndex;
 
   @override
@@ -72,9 +73,10 @@ class _LevelResultScreenState extends State<LevelResultScreen> {
 
     return Scaffold(
       body: SafeArea(
-        // بوضع landscape (عرض) الارتفاع المتاح أقل بكثير — SingleChildScrollView
-        // تضمن إن الزر ("المستوى التالي"...) يفضل يوصله الطفل بالتمرير
-        // بدل ما ينقص/يُقصّ من الشاشة (كان بق حقيقي هنا، تم تصحيحه).
+        // In landscape orientation the available height is much smaller —
+        // SingleChildScrollView ensures the button ("Next level"...) stays
+        // reachable by scrolling instead of getting clipped off the screen
+        // (was a real bug here, now fixed).
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(

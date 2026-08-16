@@ -1,5 +1,6 @@
-/* هوية بصرية "بلوك حمودي" داخل عالم اللعب — نفس ألوان/حدود NeoBox من
-   lib/theme/app_theme.dart (حدود سوداء غليظة + ظل صندوقي بدون تمويه). */
+/* "Hamoudi Blocks" visual identity inside the game world — same
+   colors/borders as the NeoBox widget in lib/theme/app_theme.dart (thick
+   black borders + a hard box shadow, no blur). */
 
 @font-face {
   font-family: "Baloo Bhaijaan 2";
@@ -57,7 +58,7 @@ html, body {
   height: 100%;
 }
 
-/* ----- عناصر HUD المشتركة ----- */
+/* ----- Shared HUD elements ----- */
 
 .neo-box {
   background: var(--surface);
@@ -177,8 +178,9 @@ html, body {
   transform: translateY(0);
 }
 
-/* أيقونة تلميح الاتجاه — صغيرة وشفافة جزئياً، تطفو أعلى نص الشاشة بدون
-   ما تسد رؤية اللعب (بدل فقاعة الكلام الكبيرة السابقة). */
+/* Direction-hint icon — small and semi-transparent, floats near the top of
+   the screen without blocking gameplay view (replaces the old big speech
+   bubble). */
 #direction-arrow {
   position: absolute;
   top: 118px;
@@ -197,7 +199,7 @@ html, body {
   transform: translateX(-50%) scale(1);
 }
 
-/* ----- الجويستيك ----- */
+/* ----- Joystick ----- */
 
 #joystick-zone {
   position: fixed;
@@ -232,7 +234,7 @@ html, body {
   border: 3px solid var(--ink);
 }
 
-/* ----- زر القفز ----- */
+/* ----- Jump button ----- */
 
 .neo-round-btn {
   position: fixed;
@@ -253,7 +255,7 @@ html, body {
   box-shadow: 0 2px 0 var(--ink);
 }
 
-/* ----- ستارة تحميل ----- */
+/* ----- Loading veil ----- */
 
 #loading-veil {
   position: fixed;
@@ -281,7 +283,7 @@ html, body {
   50% { transform: scale(1.15); }
 }
 
-/* ----- نافذة نتيجة وضع الاختبار المباشر بالمتصفح (بدون Flutter) ----- */
+/* ----- Standalone browser test-mode result overlay (no Flutter) ----- */
 
 #demo-result-veil {
   position: fixed;
@@ -340,7 +342,7 @@ html, body {
   box-shadow: 0 2px 0 var(--ink);
 }
 
-/* ----- مبدّل المجموعة (أداة اختبار) ----- */
+/* ----- Group switcher (test tool) ----- */
 
 #demo-group-switcher {
   position: fixed;
@@ -373,7 +375,7 @@ html, body {
   opacity: 1;
 }
 
-/* ----- مقدّمة وضع الاختبار (اسم + اختيار شخصية) ----- */
+/* ----- Test-mode intro (name + avatar pick) ----- */
 
 #demo-prologue {
   position: fixed;
@@ -437,8 +439,8 @@ html, body {
   margin-bottom: 18px;
 }
 
-/* بطاقة داكنة فيها معاينة 3D حيّة للشخصية تدور — بروح بطاقات اختيار
-   الشخصية بروبلكس، بس بهوية "بلوك حمودي" (حدود سوداء + ظل صندوقي). */
+/* A dark card with a live rotating 3D character preview, with Hamoudi
+   Blocks' own visual identity (black borders + box shadow). */
 .avatar-card {
   aspect-ratio: 0.8;
   border-radius: 14px;

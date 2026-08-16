@@ -1,9 +1,9 @@
 <!--
-  عالم اللعب ثلاثي الأبعاد (Milestone 2) — يُحمَّل داخل webview_flutter عبر
-  loadFlutterAsset، بدون أي اتصال إنترنت (Three.js والخط مضمّنين محلياً
-  بمجلد vendor/ و fonts/). التواصل مع Flutter عبر JavaScript Channel اسمه
-  "GameChannel" (راجعي game.js لتفاصيل رسائل الجسر، و
-  lib/screens/game/game_screen.dart بالجهة الأخرى).
+  3D game world (Milestone 2) — loaded inside webview_flutter via
+  loadFlutterAsset, with no internet connection needed (Three.js and the
+  font are bundled locally under vendor/ and fonts/). Talks to Flutter over
+  a JavaScript Channel named "GameChannel" (see game.js for the bridge
+  message details, and lib/screens/game/game_screen.dart on the other end).
 -->
 <!DOCTYPE html>
 <html lang="ar">
@@ -36,9 +36,10 @@
     <div id="speech-bubble" class="neo-box" dir="rtl"></div>
 
     <!--
-      أيقونة سهم صغيرة لتلميح الاتجاه — بدل فقاعة الكلام الكبيرة، عشان
-      ما تسد رؤية الطفل باللعب (طلب صريح). الصوت يفضل يشتغل كامل عبر
-      Bridge.audio('hint_direction', ...) بشكل مستقل عنها.
+      Small arrow icon for the direction hint — replaces the old big speech
+      bubble, so it doesn't block the child's view during gameplay (explicit
+      request). Audio still plays in full via Bridge.audio('hint_direction',
+      ...), independently of this element.
     -->
     <div id="direction-arrow"></div>
   </div>
@@ -52,10 +53,11 @@
   <button id="jump-btn" class="neo-round-btn" aria-label="قفز">⬆️</button>
 
   <!--
-    مبدّل المجموعة — أداة اختبار فقط (وضع ?demo=1 بدون Flutter)، عشان
-    تقدرين تنقلين بسرعة بين الحروف/الأرقام عربي/إنجليزي بدون ما تكملين
-    كل مستويات المجموعة الحالية أول. الأزرار الحقيقية بالتطبيق موجودة
-    بـ MainMenuScreen و LanguageSelectScreen (Flutter)، مو هنا.
+    Group switcher — a test tool only (?demo=1 mode without Flutter), so you
+    can jump quickly between Arabic/English letters/numbers without having
+    to finish every level of the current group first. The real buttons in
+    the app live in MainMenuScreen and LanguageSelectScreen (Flutter), not
+    here.
   -->
   <div id="demo-group-switcher" class="hidden"></div>
 
@@ -64,10 +66,11 @@
   </div>
 
   <!--
-    نافذة إنهاء المستوى — تظهر بس لما الصفحة تفتح لحالها بمتصفح عادي
-    (بدون GameChannel من Flutter)، عشان تجربة الاختبار المباشر بالمتصفح
-    تكون متكاملة. داخل التطبيق الحقيقي، Flutter يستقبل رسالة النتيجة
-    ويعرض LevelResultScreen بدلها (راجعي game.js: finishLevel()).
+    Level-end overlay — only shows up when the page is opened standalone in
+    a regular browser (no GameChannel from Flutter), so the standalone
+    browser test experience feels complete. Inside the real app, Flutter
+    receives the result message and shows LevelResultScreen instead (see
+    game.js: finishLevel()).
   -->
   <div id="demo-result-veil" class="hidden">
     <div class="neo-box demo-result-card" dir="rtl">
@@ -79,10 +82,10 @@
   </div>
 
   <!--
-    مقدّمة وضع الاختبار المباشر بالمتصفح (?demo=1): اسم الطفل + اختيار
-    شخصية، عشان تجربة "من تسجيل الدخول لعالم اللعب" تصير متاحة بدون
-    الحاجة لتشغيل تطبيق Flutter كامل. هذي بس أداة اختبار — الشاشات
-    الحقيقية (حساب، بروفايل) موجودة بالتطبيق نفسه (lib/screens/onboarding/).
+    Standalone browser test mode intro (?demo=1): child name + avatar pick,
+    so the "login to game world" experience is available without needing to
+    run the full Flutter app. This is a test tool only — the real screens
+    (account, profile) live in the app itself (lib/screens/onboarding/).
   -->
   <div id="demo-prologue" class="hidden">
     <div class="neo-box demo-prologue-card" dir="rtl">
@@ -101,9 +104,9 @@
   </div>
 
   <!--
-    سكربتات عادية (مو type="module") عمداً — راجعي التعليق أعلى game.js
-    لسبب هالقرار (توافق WKWebView بآيفون). three.min.js يعرّف THREE
-    كمتغيّر عام يستخدمه game.js بعده مباشرة.
+    Plain scripts (not type="module") on purpose — see the comment at the
+    top of game.js for why (iOS WKWebView compatibility). three.min.js
+    defines THREE as a global variable that game.js uses right after it.
   -->
   <script src="./vendor/three.min.js"></script>
   <script src="./game.js" defer></script>

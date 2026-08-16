@@ -4,7 +4,7 @@ import '../../models/content_item.dart';
 import '../../theme/app_theme.dart';
 import 'language_select_screen.dart';
 
-/// القائمة الرئيسية: 🔤 الحروف / 🔢 الأرقام.
+/// The main menu: 🔤 Letters / 🔢 Numbers.
 class MainMenuScreen extends StatelessWidget {
   const MainMenuScreen({super.key, required this.childId});
 
@@ -100,7 +100,7 @@ class _MenuCard extends StatelessWidget {
   }
 }
 
-/// يحدد المجموعات الأربع من (حروف/أرقام) × (عربي/إنجليزي).
+/// Picks the right one of the four groups from (letters/numbers) x (Arabic/English).
 ContentGroup groupFor({required bool isLetters, required bool isArabic}) {
   if (isLetters) {
     return isArabic ? ContentGroup.arabicLetters : ContentGroup.englishLetters;

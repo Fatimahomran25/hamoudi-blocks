@@ -1,13 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// بوابة حساب الوالد (إيميل/باسورد) — إعداد لمرة وحدة.
+/// The parent account gate (email/password) — a one-time setup.
 ///
-/// ⚠️ Milestone 1 فقط: التخزين محلي 100% على الجهاز (SharedPreferences)،
-/// بدون أي شبكة أو خادم. هذا يكفي تماماً بمرحلة الهيكلة الحالية، لكنه
-/// *ليس* بديل أمان حقيقي — بـ Milestone 4 يُستبدل الجسم الداخلي لهالكلاس
-/// بـ firebase_auth (نفس الواجهة العامة signIn/createAccount/signOut
-/// تبقى كما هي، فباقي الشاشات ما تتغيّر).
+/// ⚠️ Milestone 1 only: storage is 100% local on the device
+/// (SharedPreferences), with no network or server. This is entirely enough
+/// for the current scaffolding stage, but it is *not* a real security
+/// substitute — in Milestone 4 this class's internals get replaced with
+/// firebase_auth (the same public signIn/createAccount/signOut interface
+/// stays as-is, so the rest of the screens don't change).
 class AuthService extends ChangeNotifier {
   static const _kEmailKey = 'parent_email';
   static const _kPasswordKey = 'parent_password';
@@ -40,7 +41,7 @@ class AuthService extends ChangeNotifier {
     await prefs.setString(_kPasswordKey, password);
     _email = email.trim();
     notifyListeners();
-    return null; // null = نجاح
+    return null; // null = success
   }
 
   Future<String?> signIn(String email, String password) async {
@@ -58,7 +59,7 @@ class AuthService extends ChangeNotifier {
   Future<void> signOut() async {
     _email = null;
     notifyListeners();
-    // ملاحظة: ما نمسح بيانات الحساب من التخزين (عشان ما نفقد بروفايلات
-    // الأطفال)، فقط ننهي الجلسة الحالية بالواجهة.
+    // Note: we don't clear the account data from storage (so we don't lose
+    // the children's profiles), we just end the current UI session.
   }
 }

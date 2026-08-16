@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// خيار شخصية بلوكية جاهزة يختارها الطفل. الألوان تُستخدم لرسم المعاينة
-/// البلوكية الآن (Milestone 1) ولاحقاً لتلوين نفس الشخصية داخل عالم اللعب
-/// ثلاثي الأبعاد (Milestone 2).
+/// A ready-made blocky character option the child picks. The colors are
+/// used to draw the blocky preview now (Milestone 1) and later to color the
+/// same character inside the 3D game world (Milestone 2).
 class AvatarOption {
   const AvatarOption({
     required this.id,
@@ -19,8 +19,9 @@ class AvatarOption {
   final Color hairColor;
 }
 
-/// 6 شخصيات جاهزة (لون جاكيت/شعر/بشرة مختلف لكل وحدة) — راجعي قسم
-/// "اختيار الشخصية" بالبرومت الأصلي. يمكن إضافة المزيد لاحقاً كمكافآت.
+/// 6 ready-made characters (a different jacket/hair/skin color for each) —
+/// see the "character selection" section of the original prompt. More can
+/// be added later as rewards.
 const List<AvatarOption> kAvatarOptions = [
   AvatarOption(
     id: 'red_jacket',

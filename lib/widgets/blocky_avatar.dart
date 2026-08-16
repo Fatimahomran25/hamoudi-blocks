@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import '../models/avatar_option.dart';
 import '../theme/app_theme.dart';
 
-/// معاينة بلوكية بسيطة (رأس + جسم + ذراعين + رجلين، صناديق ملونة بحدود
-/// سوداء) بنفس روح شخصية عالم اللعب ثلاثي الأبعاد. هذا تمثيل 2D خفيف
-/// يكفي تماماً لشاشة اختيار الشخصية بـ Milestone 1 — بـ Milestone 2 نفس
-/// [AvatarOption.id] يُستخدم لتلوين الموديل الحقيقي ثلاثي الأبعاد جوا
-/// عالم Three.js.
+/// A simple blocky preview (head + torso + 2 arms + 2 legs, colored boxes
+/// with black borders) in the same spirit as the 3D game world's
+/// character. This is a lightweight 2D representation that's entirely
+/// enough for the character-selection screen in Milestone 1 — in
+/// Milestone 2 the same [AvatarOption.id] is used to color the real 3D
+/// model inside the Three.js world.
 class BlockyAvatarPreview extends StatefulWidget {
   const BlockyAvatarPreview({
     super.key,
@@ -64,7 +65,7 @@ class _BlockyAvatarPreviewState extends State<BlockyAvatarPreview>
     final body = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // الرأس + الشعر
+        // Head + hair
         Stack(
           alignment: Alignment.topCenter,
           children: [
@@ -76,7 +77,7 @@ class _BlockyAvatarPreviewState extends State<BlockyAvatarPreview>
           ],
         ),
         const SizedBox(height: 4),
-        // الجسم + الذراعين
+        // Torso + arms
         Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +90,7 @@ class _BlockyAvatarPreviewState extends State<BlockyAvatarPreview>
           ],
         ),
         const SizedBox(height: 4),
-        // الرجلين
+        // Legs
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [

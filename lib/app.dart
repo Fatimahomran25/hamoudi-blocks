@@ -40,9 +40,10 @@ class HamoudiBlocksApp extends StatelessWidget {
   }
 }
 
-/// يقرر أول شاشة يشوفها المستخدم حسب حالة الجلسة المحفوظة محلياً:
-/// لا حساب → تسجيل دخول/إنشاء حساب. حساب بدون أطفال → إضافة طفل.
-/// حساب فيه أطفال → دخول اللعبة مباشرة (الطفل ما يكتب أي شي).
+/// Decides the first screen the user sees based on the locally saved
+/// session state: no account → sign in/create account. An account with no
+/// children → add a child. An account with children → straight into the
+/// game (the child doesn't type anything).
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 

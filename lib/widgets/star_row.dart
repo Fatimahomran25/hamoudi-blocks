@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// صف نجوم (من أصل [total]) — يُستخدم بشاشة المستويات وشاشة الفوز.
+/// A row of stars (out of [total]) — used in the levels screen and the win screen.
 class StarRow extends StatelessWidget {
   const StarRow({super.key, required this.earned, this.total = 4, this.size = 22});
 
@@ -26,7 +26,7 @@ class StarRow extends StatelessWidget {
   }
 }
 
-/// صف قلوب (المحاولات المتبقية باللعب) — من أصل [total] = 3 حسب البرومت.
+/// A row of hearts (remaining attempts in gameplay) — out of [total] = 3 per the prompt.
 class HeartRow extends StatelessWidget {
   const HeartRow({super.key, required this.remaining, this.total = 3, this.size = 26});
 

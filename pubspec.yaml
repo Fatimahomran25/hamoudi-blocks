@@ -1,5 +1,5 @@
 name: hamoudi_blocks
-description: "بلوك حمودي - لعبة تعليمية للحروف والأرقام لعمر 4 سنوات."
+description: "Hamoudi Blocks - an educational letters and numbers game for a 4-year-old."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -7,40 +7,41 @@ version: 1.0.0+1
 environment:
   sdk: ^3.10.7
 
-# ملاحظة (راجعي NEXT_STEPS.md بجذر المشروع لتفاصيل كل مرحلة):
-#   - Milestone 1 (هيكل التطبيق) و Milestone 2 (عالم اللعب 3D) و Milestone 3
-#     (الصوت المسجّل) منتهيات.
-#   - Milestone 4 (الباك اند): firebase_core, firebase_auth, cloud_firestore, firebase_messaging.
+# Note (see NEXT_STEPS.md at the project root for each milestone's details):
+#   - Milestone 1 (app scaffolding), Milestone 2 (3D game world), and
+#     Milestone 3 (recorded audio) are done.
+#   - Milestone 4 (backend): firebase_core, firebase_auth, cloud_firestore, firebase_messaging.
 dependencies:
   flutter:
     sdk: flutter
 
-  # ترجمة الويدجت الأساسية (اتجاه RTL صحيح، نصوص الأزرار الجاهزة...) للعربي.
+  # Base widget localization (correct RTL direction, built-in button text...) for Arabic.
   flutter_localizations:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
 
-  # خط عربي/إنجليزي دائري كرتوني (Baloo Bhaijaan 2) — يُحمَّل من Google Fonts.
+  # A rounded cartoon Arabic/English font (Baloo Bhaijaan 2) — loaded from Google Fonts.
   google_fonts: ^6.2.1
 
-  # إدارة الحالة (بروفايلات الأطفال، الجلسة، التقدم).
+  # State management (child profiles, session, progress).
   provider: ^6.1.2
 
-  # تخزين محلي فوري (بدون إنترنت) لحساب الوالد وبروفايلات الأطفال والتقدم.
-  # لاحقاً (Milestone 4) نزامنه مع Firestore فوق نفس الطبقة (ProfileService).
+  # Instant local storage (no internet) for the parent account, child
+  # profiles, and progress. Later (Milestone 4) synced with Firestore on
+  # top of the same layer (ProfileService).
   shared_preferences: ^2.3.3
 
-  # لتوليد معرّفات فريدة لبروفايلات الأطفال.
+  # For generating unique IDs for child profiles.
   uuid: ^4.5.1
 
-  # يعرض عالم اللعب ثلاثي الأبعاد (Three.js محلي بـ assets/game3d/) داخل
-  # WebView بدون إنترنت — التواصل مع Flutter عبر JavaScript Channel
-  # (راجعي lib/screens/game/game_screen.dart).
+  # Displays the 3D game world (Three.js, local under assets/game3d/) inside
+  # a WebView with no internet — communicates with Flutter over a
+  # JavaScript Channel (see lib/screens/game/game_screen.dart).
   webview_flutter: ^4.14.1
 
-  # تشغيل المقاطع الصوتية المسجّلة مسبقاً (Piper TTS محلي، صوت عربي طبيعي)
-  # بـ assets/audio/ — راجعي lib/services/audio_service.dart.
+  # Plays the pre-recorded audio clips (natural Arabic voice) under
+  # assets/audio/ — see lib/services/audio_service.dart.
   audioplayers: ^6.7.1
 
 dev_dependencies:
@@ -52,23 +53,24 @@ flutter:
   uses-material-design: true
 
   assets:
-    # الصوت المسجّل مسبقاً (Azure Neural TTS، صوت سعودي — راجعي
-    # lib/services/audio_service.dart لتفاصيل التشغيل والتسمية):
-    #   content/       — "يا بطل! قول: أ... أسد!" (74 ملف: ar_letter_0..27،
-    #                    en_letter_0..25، ar_number_0..9، en_number_0..9؛
-    #                    الترقيم يطابق ترتيب lib/data/content_repository.dart).
-    #   content_found/ — تكرار الحرف 3 مرات عند النجاح ("لقينا حرف الألف!
-    #                    الألف! الألف! الألف!") — نفس ترقيم content/.
-    #   phrases/       — عبارات عامة (ترحيب، تشجيع، تلميح اتجاه، خطأ، فوز...).
+    # Pre-recorded audio (Azure Neural TTS, Saudi voice — see
+    # lib/services/audio_service.dart for playback and naming details):
+    #   content/       — "Hero! Say: Alef... Lion!" (74 files: ar_letter_0..27,
+    #                    en_letter_0..25, ar_number_0..9, en_number_0..9;
+    #                    numbering matches lib/data/content_repository.dart's order).
+    #   content_found/ — the letter repeated 3 times on success ("We found
+    #                    the letter Alef! Alef! Alef! Alef!") — same numbering as content/.
+    #   phrases/       — general phrases (welcome, encouragement, direction hint, error, win...).
     - assets/audio/content/
     - assets/audio/content_found/
     - assets/audio/phrases/
     - assets/images/
 
-    # عالم اللعب ثلاثي الأبعاد (Milestone 2) — Three.js محلي بالكامل
-    # (بدون إنترنت)، يُحمَّل عبر webview_flutter's loadFlutterAsset.
-    # ملاحظة: تعريف الأصول بفلَتر ما يشمل المجلدات الفرعية تلقائياً،
-    # فلازم كل مجلد فيه ملفات يُذكر لحاله (vendor/ للمكتبة، fonts/ للخط).
+    # The 3D game world (Milestone 2) — Three.js entirely local (no
+    # internet), loaded via webview_flutter's loadFlutterAsset.
+    # Note: Flutter's asset declaration doesn't include subfolders
+    # automatically, so every folder with files must be listed on its own
+    # (vendor/ for the library, fonts/ for the font).
     - assets/game3d/
     - assets/game3d/vendor/
     - assets/game3d/fonts/

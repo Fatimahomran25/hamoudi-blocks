@@ -12,10 +12,11 @@ import '../../widgets/blocky_avatar.dart';
 import '../../widgets/star_row.dart';
 import '../game/game_screen.dart';
 
-/// شاشة المستويات — خريطة/رود ماب متعرّجة (زي خرائط مستويات الألعاب)
-/// بدل شبكة كروت عادية: مسار يوصل بين المستويات، الشخصية المختارة
-/// (بألوانها الحقيقية) واقفة على المستوى الحالي كعلامة "انتِ هنا"، ونجوم
-/// كل مستوى مكتمل ظاهرة عالمسار نفسه.
+/// The levels screen — a winding roadmap (like a video game's level map)
+/// instead of a plain card grid: a path connecting levels, the selected
+/// character (in its real colors) standing on the current level as a "you
+/// are here" marker, and stars for each completed level shown on the path
+/// itself.
 class LevelsScreen extends StatefulWidget {
   const LevelsScreen({super.key, required this.childId, required this.group});
 
@@ -34,8 +35,8 @@ class _LevelsScreenState extends State<LevelsScreen> {
   final _scrollController = ScrollController();
   bool _scrolledToCurrent = false;
 
-  /// إحداثية أفقية متعرّجة (0..1) لكل مستوى — نمط S منتظم زي خرائط
-  /// المستويات المعروفة (وسط، يمين، وسط، يسار...).
+  /// A winding horizontal coordinate (0..1) for each level — a regular S
+  /// pattern like familiar level maps (center, right, center, left...).
   double _xFraction(int index) => 0.5 + 0.32 * math.sin(index * math.pi / 2);
 
   void _scrollToIndexIfNeeded(int index, int total) {
@@ -69,8 +70,8 @@ class _LevelsScreenState extends State<LevelsScreen> {
     final avatar = avatarById(child.avatarId);
     final levels = ContentRepository.levelsFor(widget.group);
 
-    // "المستوى الحالي" = أول مستوى مفتوح لسا ما اكتمل؛ لو كلها اكتملت
-    // نخلي العلامة على آخر مستوى.
+    // "Current level" = the first unlocked level that isn't completed yet;
+    // if all are completed, put the marker on the last level.
     var currentIndex = levels.length - 1;
     for (var i = 0; i < levels.length; i++) {
       final unlocked = child.isLevelUnlocked(widget.group, i);
@@ -137,8 +138,9 @@ class _LevelsScreenState extends State<LevelsScreen> {
   }
 }
 
-/// عقدة مستوى وحدة على المسار — تحسب موقعها الأفقي نسبة لعرض الشاشة عبر
-/// LayoutBuilder (بدل موقع ثابت) عشان تنفع أي حجم شاشة.
+/// A single level node on the path — computes its horizontal position as a
+/// fraction of screen width via LayoutBuilder (instead of a fixed position)
+/// so it works for any screen size.
 class _LevelNode extends StatelessWidget {
   const _LevelNode({
     required this.top,
@@ -168,9 +170,10 @@ class _LevelNode extends StatelessWidget {
       top: top,
       left: 0,
       right: 0,
-      // ارتفاع ثابت (بدل الاعتماد على المحتوى) — الفقّاعة + صف النجوم تحته؛
-      // علامة "انتِ هنا" تُرسم فوق حدود هالصندوق (Clip.none)، ما تحتاج
-      // مساحة داخل الارتفاع نفسه.
+      // Fixed height (instead of relying on content) — the bubble + the
+      // star row below it; the "you are here" marker is drawn beyond this
+      // box's bounds (Clip.none), so it doesn't need space within the
+      // height itself.
       height: nodeSize + 90,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -182,7 +185,7 @@ class _LevelNode extends StatelessWidget {
                 left: centerX - nodeSize / 2,
                 top: 0,
                 width: nodeSize,
-                height: nodeSize + 36, // الدائرة + المسافة + صف النجوم الكبيرة تحتها.
+                height: nodeSize + 36, // The circle + spacing + the big star row below it.
                 child: _NodeBubble(
                   index: index,
                   unlocked: unlocked,
@@ -271,8 +274,8 @@ class _NodeBubble extends StatelessWidget {
   }
 }
 
-/// خط متقطّع يوصل بين مراكز المستويات على المسار (نفس ألوان الهوية —
-/// حدود سوداء) — يُرسم خلف العقد.
+/// A dashed line connecting level centers along the path (same visual
+/// identity colors — black borders) — drawn behind the nodes.
 class _RoadmapPathPainter extends CustomPainter {
   _RoadmapPathPainter({
     required this.count,
@@ -322,9 +325,10 @@ class _RoadmapPathPainter extends CustomPainter {
       oldDelegate.count != count || oldDelegate.spacing != spacing;
 }
 
-/// خلفية طبيعة بلوكية (أشجار وشجيرات بسيطة، صناديق ملوّنة زي هوية عالم
-/// اللعب) خلف المسار — بذرة ثابتة (Random(7)) عشان المواقع ما تتغيّر كل
-/// إعادة رسم، ومبعثرة قريب من حواف الشاشة عشان ما تزاحم المسار والعقد.
+/// A blocky nature background (simple trees and bushes, colored boxes
+/// matching the game world's visual identity) behind the path — a fixed
+/// seed (Random(7)) so positions don't change on every repaint, scattered
+/// near the screen edges so they don't crowd the path and nodes.
 class _NaturePainter extends CustomPainter {
   _NaturePainter({required this.totalHeight});
 
@@ -365,7 +369,8 @@ class _NaturePainter extends CustomPainter {
     );
     canvas.drawRRect(RRect.fromRectAndRadius(canopyRect, Radius.circular(6 * scale)), canopyPaint);
 
-    // كتلة ثانية أصغر فوق الأولى تعطي إحساس "بلوكات متراكمة" بدل مربع وحد.
+    // A second, smaller block on top of the first gives a "stacked blocks"
+    // feel instead of a single box.
     final topRect = Rect.fromCenter(
       center: Offset(base.dx, canopyRect.top + 6 * scale),
       width: canopySize * 0.6,

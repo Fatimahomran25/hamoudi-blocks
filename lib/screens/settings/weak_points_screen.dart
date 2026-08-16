@@ -7,11 +7,12 @@ import '../../services/profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/big_button.dart';
 
-/// شاشة "نقاط ضعف الطفل" (للوالدين فقط، يوصلها زر بـ GameLoginScreen).
-/// خطوتين: 1) اختيار المجموعة (حروف/أرقام × عربي/إنجليزي) 2) شبكة كل
-/// عناصر هالمجموعة، تضغطين على أي عنصر تعلّمينه/تشيلينه كنقطة ضعف.
-/// العناصر المُعلَّمة تُضاف تلقائياً كجولات إضافية بآخر كل مستوى قادم
-/// بنفس المجموعة (راجعي GameScreen._buildRoundItems) لحد ما تشيلينها.
+/// The "Child's Weak Points" screen (parents only, reached via a button in
+/// GameLoginScreen). Two steps: 1) pick a group (letters/numbers x Arabic/
+/// English) 2) a grid of that group's items — tap any item to mark/unmark
+/// it as a weak point. Marked items are automatically added as bonus rounds
+/// at the end of every future level in the same group (see
+/// GameScreen._buildRoundItems) until unmarked.
 class WeakPointsScreen extends StatefulWidget {
   const WeakPointsScreen({super.key, required this.childId});
 

@@ -6,44 +6,47 @@ import 'package:flutter/services.dart';
 import '../data/content_repository.dart';
 import '../models/content_item.dart';
 
-/// أحداث صوتية عامة (بدون رمز محدد) — كل وحدة تطابق ملف واحد أو أكثر
-/// بـ assets/audio/phrases/. تعريف عنصر تعليمي محدد (حرف/رقم) له ميثود
-/// مستقل ([AudioService.playContentIntro]) لأنه يحتاج الرمز نفسه.
+/// Generic audio events (no specific symbol) — each maps to one or more
+/// files under assets/audio/phrases/. A specific learning item (letter/
+/// number) has its own method ([AudioService.playContentIntro]) since it
+/// needs the symbol itself.
 enum GameAudioEvent {
-  /// نقرة واجهة بسيطة — اهتزاز لمسي بس، بدون ملف صوت مخصص.
+  /// Simple UI tap — haptic feedback only, no dedicated sound file.
   buttonTap,
 
-  /// ترحيب عام ببداية الجلسة ("يلا يا بطل! جاهز نلعب؟").
+  /// General welcome at the start of a session ("Come on, hero! Ready to play?").
   levelIntro,
 
-  /// تشجيع عشوائي عند الإجابة الصحيحة (4 عبارات متنوعة، راجعي [play]).
+  /// Random encouragement on a correct answer (4 varied phrases, see [play]).
   correctAnswer,
 
-  /// عبارة مواساة ودّية عند لمس منصّة غلط.
+  /// A friendly, comforting phrase when touching a wrong pedestal.
   wrongAnswer,
 
-  /// تهنئة إنهاء المستوى بنجاح.
+  /// Congratulations for successfully finishing a level.
   levelWin,
 
-  /// تشجيع "حاول مرة ثانية" عند نفاد القلوب.
+  /// Encouraging "try again" when hearts run out.
   levelRetry,
 
-  /// تلميح اتجاه — يُستدعى فعلياً عبر [playHintDirection] لأنه يحتاج
-  /// الاتجاه (قدامك/يمين/يسار)؛ موجود هنا فقط لاكتمال التعداد.
+  /// Direction hint — actually invoked via [playHintDirection] since it
+  /// needs the direction (ahead/right/left/behind); exists here only to
+  /// complete the enum.
   hintDirection,
 
-  /// صوت "بوينج" مرح وقت القفز.
+  /// A cheerful "boing" sound on jump.
   jump,
 }
 
-/// نقطة وصل واحدة لكل صوت باللعبة — كل الأصوات مقاطع مسجّلة مسبقاً بصوت
-/// عربي سعودي طبيعي (Azure Neural TTS، صوت ar-SA-HamedNeural)، مو TTS حي
-/// بالجهاز، بحيث الجودة ثابتة على كل الأجهزة (راجعي قسم "جودة الصوت"
-/// بالبرومت الأصلي). الملفات بـ assets/audio/content/ (تعريف كل حرف/رقم
-/// وقت البحث — "يا بطل! قول: أ... أسد!")، assets/audio/content_found/
-/// (تكرار الحرف 3 مرات عند النجاح — "لقينا حرف الألف! الألف! الألف!
-/// الألف!" — عشان يرسخ بذاكرة الطفل)، و assets/audio/phrases/ (عبارات
-/// عامة).
+/// The single point of contact for all game audio — every sound is a
+/// pre-recorded clip in a natural Saudi Arabic voice (Azure Neural TTS,
+/// voice ar-SA-HamedNeural), not live on-device TTS, so quality stays
+/// consistent across every device (see the "audio quality" section of the
+/// original prompt). Files live under assets/audio/content/ (each letter/
+/// number's intro while searching — "Hero! Say: Alef... Lion!"),
+/// assets/audio/content_found/ (the letter repeated 3 times on success —
+/// "We found the letter Alef! Alef! Alef! Alef!" — so it sticks in the
+/// child's memory), and assets/audio/phrases/ (general phrases).
 class AudioService {
   AudioService._();
   static final AudioService instance = AudioService._();
@@ -58,8 +61,8 @@ class AudioService {
       await _player.stop();
       await _player.play(AssetSource('audio/$relativePath'));
     } catch (_) {
-      // ملف صوت غايب أو تعذّر التشغيل — نتجاهله بأمان، اللعب يكمل بصمت
-      // بدل ما يطيح التطبيق بـ Exception.
+      // Missing audio file or playback failed — ignore safely, gameplay
+      // continues silently instead of throwing.
     }
   }
 
@@ -69,11 +72,11 @@ class AudioService {
     switch (event) {
       case GameAudioEvent.buttonTap:
       case GameAudioEvent.hintDirection:
-        return; // بدون ملف مخصص — راجعي playHintDirection للتلميح.
+        return; // No dedicated file — see playHintDirection for the hint.
       case GameAudioEvent.levelIntro:
         return _playAsset('phrases/level_intro.wav');
       case GameAudioEvent.correctAnswer:
-        final variant = _random.nextInt(4) + 1; // 4 عبارات تشجيع متنوعة.
+        final variant = _random.nextInt(4) + 1; // 4 varied encouragement phrases.
         return _playAsset('phrases/correct_answer_$variant.wav');
       case GameAudioEvent.wrongAnswer:
         return _playAsset('phrases/wrong_answer.wav');
@@ -86,9 +89,9 @@ class AudioService {
     }
   }
 
-  /// تلميح اتجاه — [direction] واحدة من 'ahead' / 'left' / 'right' /
-  /// 'behind' (نفس القيم اللي يرسلها assets/game3d/game.js). أي قيمة غير
-  /// معروفة تُعامل كـ 'ahead' بأمان بدل ما تفشل بصمت.
+  /// A direction hint — [direction] is one of 'ahead' / 'left' / 'right' /
+  /// 'behind' (the same values sent by assets/game3d/game.js). Any unknown
+  /// value is safely treated as 'ahead' instead of failing silently.
   Future<void> playHintDirection(String direction) async {
     if (!soundEnabled) return;
     HapticFeedback.lightImpact();
@@ -97,10 +100,11 @@ class AudioService {
     return _playAsset('phrases/hint_direction_$safe.wav');
   }
 
-  /// نطق تعريف عنصر تعليمي (حرف/رقم) حسب رمزه [symbol] (مثلاً 'أ' أو 'A'
-  /// أو '٣'). يحوّل الرمز لمفتاح ملف عبر [_contentAudioKey] بالاعتماد على
-  /// ترتيب [ContentRepository] نفسه — فأي تعديل مستقبلي على المحتوى
-  /// (إضافة/حذف عنصر) ينعكس تلقائياً بدون تعديل هالميثود.
+  /// Speaks the intro for a learning item (letter/number) by its [symbol]
+  /// (e.g. 'أ' or 'A' or '٣'). Maps the symbol to a file key via
+  /// [_contentAudioKey], relying on [ContentRepository]'s own ordering — so
+  /// any future content change (adding/removing an item) is reflected
+  /// automatically without touching this method.
   Future<void> playContentIntro(String symbol) async {
     if (!soundEnabled) return;
     final key = _contentAudioKey(symbol);
@@ -108,10 +112,11 @@ class AudioService {
     return _playAsset('content/$key.wav');
   }
 
-  /// تكرار احتفالي بالحرف/الرقم 3 مرات لما الطفل يوصله صح ("لقينا حرف
-  /// الألف! الألف! الألف! الألف!") — يحل محل التشجيع العام
-  /// ([GameAudioEvent.correctAnswer]) عشان الاسم يرسخ بذاكرة الطفل
-  /// (راجعي قسم "آلية اللعب" — طلب تكرار صريح من المستخدمة).
+  /// A celebratory repeat of the letter/number 3 times when the child
+  /// reaches it correctly ("We found the letter Alef! Alef! Alef! Alef!")
+  /// — replaces generic encouragement ([GameAudioEvent.correctAnswer]) so
+  /// the name sticks in the child's memory (see the "gameplay mechanics"
+  /// section — an explicit repetition request from the user).
   Future<void> playFoundContent(String symbol) async {
     if (!soundEnabled) return;
     HapticFeedback.lightImpact();
