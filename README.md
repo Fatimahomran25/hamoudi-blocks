@@ -1,10 +1,10 @@
 # 🧊 بلوك حمودي (Hamoudi Blocks)
 
 لعبة تعليمية للحروف والأرقام (عربي/إنجليزي) لطفل عمره 4 سنوات، مبنية
-بـ Flutter. هذا الريبو أنهى **Milestone 1** (هيكل التطبيق: الشاشات،
-التنقل، الحسابات، البروفايلات، التخزين المحلي) و **Milestone 2** (عالم
-اللعب ثلاثي الأبعاد الحقيقي بـ Three.js داخل WebView محلي) — الصوت
-المسجّل ومزامنة Firebase لسا ما اتضافوا (تفاصيل كل مرحلة بـ
+بـ Flutter. هذا الريبو أنهى **Milestone 1** (هيكل التطبيق)، **Milestone
+2** (عالم اللعب ثلاثي الأبعاد الحقيقي بـ Three.js داخل WebView محلي)،
+و**Milestone 3** (الصوت المسجّل مسبقاً بصوت سعودي طبيعي عبر Azure Neural
+TTS) — مزامنة Firebase لسا ما اتضافت (تفاصيل كل مرحلة بـ
 [NEXT_STEPS.md](NEXT_STEPS.md)).
 
 ## تشغيل المشروع
@@ -52,7 +52,7 @@ lib/
   services/
     auth_service.dart       # بوابة حساب الوالد (محلي الآن، Firebase لاحقاً)
     profile_service.dart    # بروفايلات الأطفال + التقدم (محلي الآن)
-    audio_service.dart      # نقطة وصل الصوت (stub الآن، ملفات حقيقية بـ Milestone 3)
+    audio_service.dart      # يشغّل مقاطع assets/audio/ الحقيقية (Azure Neural TTS، صوت سعودي)
   screens/
     onboarding/  home/  game/  settings/
     game/game_screen.dart    # WebView محلي لعالم Three.js + جسر GameChannel
@@ -63,6 +63,11 @@ assets/game3d/              # عالم اللعب ثلاثي الأبعاد (Thr
   index.html  style.css  game.js
   vendor/three.module.js    # مكتبة Three.js مُضمَّنة محلياً (لا CDN)
   fonts/*.woff2              # خط Baloo Bhaijaan 2 مُضمَّن محلياً
+
+assets/audio/                # صوت سعودي طبيعي مسجّل مسبقاً (Azure Neural TTS، فصحى)
+  content/{ar|en}_{letter|number}_N.wav       # "قُل: أ... مثل أسد!" (74 ملف)
+  content_found/{ar|en}_{letter|number}_N.wav # تكرار 3 مرات عند النجاح (74 ملف)
+  phrases/*.wav                                # ترحيب/تشجيع/تلميح/خطأ/فوز (12 ملف)
 ```
 
 كل خدمة (`AuthService`, `ProfileService`, `AudioService`) مصمّمة بحيث

@@ -260,3 +260,183 @@ html, body {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.15); }
 }
+
+/* ----- نافذة نتيجة وضع الاختبار المباشر بالمتصفح (بدون Flutter) ----- */
+
+#demo-result-veil {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 26, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 24px;
+}
+
+#demo-result-veil.hidden {
+  display: none;
+}
+
+.demo-result-card {
+  text-align: center;
+  max-width: 340px;
+  width: 100%;
+}
+
+#demo-result-emoji {
+  font-size: 64px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+#demo-result-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+#demo-result-subtitle {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+
+.neo-button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--green);
+  border: 3px solid var(--ink);
+  box-shadow: 0 5px 0 var(--ink);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-light);
+}
+
+.neo-button:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 var(--ink);
+}
+
+/* ----- مبدّل المجموعة (أداة اختبار) ----- */
+
+#demo-group-switcher {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  gap: 6px;
+}
+
+#demo-group-switcher.hidden {
+  display: none;
+}
+
+.demo-group-btn {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  background: var(--surface);
+  color: var(--text-light);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.demo-group-btn.active {
+  background: var(--blue);
+  opacity: 1;
+}
+
+/* ----- مقدّمة وضع الاختبار (اسم + اختيار شخصية) ----- */
+
+#demo-prologue {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 70;
+  padding: 24px;
+}
+
+#demo-prologue.hidden {
+  display: none;
+}
+
+.demo-prologue-card {
+  text-align: center;
+  max-width: 360px;
+  width: 100%;
+}
+
+.prologue-emoji {
+  font-size: 56px;
+  margin-bottom: 4px;
+}
+
+.prologue-title {
+  font-size: 21px;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.prologue-input {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  border: 3px solid var(--ink);
+  background: var(--bg);
+  color: var(--text-light);
+  font-family: inherit;
+  font-size: 17px;
+  text-align: center;
+}
+
+.prologue-input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+#prologue-step-name.hidden,
+#prologue-step-avatar.hidden {
+  display: none;
+}
+
+.prologue-avatar-grid-3d {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+/* بطاقة داكنة فيها معاينة 3D حيّة للشخصية تدور — بروح بطاقات اختيار
+   الشخصية بروبلكس، بس بهوية "بلوك حمودي" (حدود سوداء + ظل صندوقي). */
+.avatar-card {
+  aspect-ratio: 0.8;
+  border-radius: 14px;
+  border: 3px solid var(--ink);
+  background: #1c1c24;
+  box-shadow: 0 4px 0 var(--ink);
+  overflow: hidden;
+  position: relative;
+}
+
+.avatar-card canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.avatar-card.selected {
+  border-color: var(--yellow);
+  border-width: 4px;
+  box-shadow: 0 4px 0 var(--yellow);
+}

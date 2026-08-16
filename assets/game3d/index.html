@@ -44,8 +44,53 @@
 
   <button id="jump-btn" class="neo-round-btn" aria-label="قفز">⬆️</button>
 
+  <!--
+    مبدّل المجموعة — أداة اختبار فقط (وضع ?demo=1 بدون Flutter)، عشان
+    تقدرين تنقلين بسرعة بين الحروف/الأرقام عربي/إنجليزي بدون ما تكملين
+    كل مستويات المجموعة الحالية أول. الأزرار الحقيقية بالتطبيق موجودة
+    بـ MainMenuScreen و LanguageSelectScreen (Flutter)، مو هنا.
+  -->
+  <div id="demo-group-switcher" class="hidden"></div>
+
   <div id="loading-veil">
     <div class="loading-emoji">🧊</div>
+  </div>
+
+  <!--
+    نافذة إنهاء المستوى — تظهر بس لما الصفحة تفتح لحالها بمتصفح عادي
+    (بدون GameChannel من Flutter)، عشان تجربة الاختبار المباشر بالمتصفح
+    تكون متكاملة. داخل التطبيق الحقيقي، Flutter يستقبل رسالة النتيجة
+    ويعرض LevelResultScreen بدلها (راجعي game.js: finishLevel()).
+  -->
+  <div id="demo-result-veil" class="hidden">
+    <div class="neo-box demo-result-card" dir="rtl">
+      <div id="demo-result-emoji">🎉</div>
+      <div id="demo-result-title"></div>
+      <div id="demo-result-subtitle"></div>
+      <button id="demo-result-btn" class="neo-button">حاول مرة ثانية 🔁</button>
+    </div>
+  </div>
+
+  <!--
+    مقدّمة وضع الاختبار المباشر بالمتصفح (?demo=1): اسم الطفل + اختيار
+    شخصية، عشان تجربة "من تسجيل الدخول لعالم اللعب" تصير متاحة بدون
+    الحاجة لتشغيل تطبيق Flutter كامل. هذي بس أداة اختبار — الشاشات
+    الحقيقية (حساب، بروفايل) موجودة بالتطبيق نفسه (lib/screens/onboarding/).
+  -->
+  <div id="demo-prologue" class="hidden">
+    <div class="neo-box demo-prologue-card" dir="rtl">
+      <div id="prologue-step-name">
+        <div class="prologue-emoji">👋</div>
+        <div class="prologue-title">شو اسم بطلنا؟</div>
+        <input id="prologue-name-input" class="prologue-input" placeholder="مثلاً: حمودي" />
+        <button id="prologue-name-btn" class="neo-button">التالي ➡️</button>
+      </div>
+      <div id="prologue-step-avatar" class="hidden">
+        <div class="prologue-title">اختر شخصيتك يا بطل</div>
+        <div id="prologue-avatar-grid" class="prologue-avatar-grid-3d"></div>
+        <button id="prologue-avatar-btn" class="neo-button">ابدأ اللعب 🎮</button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="./game.js"></script>

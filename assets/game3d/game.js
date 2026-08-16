@@ -17,6 +17,12 @@ import * as THREE from './vendor/three.module.js';
 
 // ============================== الجسر (Bridge) ==============================
 
+/** true لو الصفحة مفتوحة جوا webview_flutter الحقيقي (فيه GameChannel)،
+ * false لو مفتوحة لحالها بمتصفح عادي (وضع اختبار/تطوير مباشر). */
+function hasBridge() {
+  return !!(window.GameChannel && typeof window.GameChannel.postMessage === 'function');
+}
+
 const Bridge = {
   send(msg) {
     try {
@@ -33,6 +39,85 @@ const Bridge = {
   },
   audio(event, extra) {
     Bridge.send({ type: 'audio', event, ...extra });
+    // بوضع الاختبار المباشر بالمتصفح (بدون Flutter) ما فيه AudioService
+    // يشغّل الملف — نشغّله هنا مباشرة عشان نقدر نسمع نفس الأصوات
+    // الحقيقية بدون الحاجة لتطبيق Flutter كامل.
+    if (!hasBridge()) DemoAudio.play(event, extra);
+  },
+};
+
+// ============================== صوت وضع الاختبار المباشر ==============================
+// نفس منطق lib/services/audio_service.dart بالضبط (نفس أسماء الملفات
+// وترتيب المحتوى) — بس بجافاسكربت عشان يشتغل بدون Flutter. الملفات
+// تُقرأ من سيرفر محلي منفصل (راجعي assets/audio/ — شغّليه بأمر مثل:
+// node static_server.js assets/audio 8792) لأنها خارج مجلد game3d/.
+const DemoAudio = {
+  baseUrl: 'http://localhost:8792/',
+  arabicLetters: ['أ', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'م', 'ن', 'هـ', 'و', 'ي'],
+  englishLetters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
+  arabicNumbers: ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'],
+  englishNumbers: '0123456789'.split(''),
+
+  contentKey(symbol) {
+    const groups = [
+      ['ar_letter', this.arabicLetters],
+      ['en_letter', this.englishLetters],
+      ['ar_number', this.arabicNumbers],
+      ['en_number', this.englishNumbers],
+    ];
+    for (const [prefix, list] of groups) {
+      const i = list.indexOf(symbol);
+      if (i !== -1) return `${prefix}_${i}`;
+    }
+    return null;
+  },
+
+  currentAudio: null,
+
+  playFile(relativePath) {
+    try {
+      // نوقف أي صوت شغّال قبل، بالضبط زي AudioService.dart (مشغّل واحد
+      // مشترك) — وإلا يصير تداخل صوتين لو صوت جديد يبدأ قبل ما يخلص
+      // اللي قبله (كان بق حقيقي هنا، تم تصحيحه).
+      if (this.currentAudio) {
+        this.currentAudio.pause();
+        this.currentAudio.currentTime = 0;
+      }
+      const audio = new Audio(this.baseUrl + relativePath);
+      this.currentAudio = audio;
+      audio.play().catch(() => {});
+    } catch (err) {
+      // سيرفر الصوت مو شغّال أو الملف مو موجود — نتجاهل بأمان.
+    }
+  },
+
+  play(event, extra) {
+    if (event === 'level_intro') {
+      if (extra?.symbol) {
+        const key = this.contentKey(extra.symbol);
+        if (key) this.playFile(`content/${key}.wav`);
+      } else {
+        this.playFile('phrases/level_intro.wav');
+      }
+      return;
+    }
+    if (event === 'hint_direction') {
+      const dir = ['ahead', 'left', 'right'].includes(extra?.direction) ? extra.direction : 'ahead';
+      this.playFile(`phrases/hint_direction_${dir}.wav`);
+      return;
+    }
+    if (event === 'correct_answer') {
+      this.playFile(`phrases/correct_answer_${1 + Math.floor(Math.random() * 4)}.wav`);
+      return;
+    }
+    if (event === 'found_answer') {
+      const key = extra?.symbol ? this.contentKey(extra.symbol) : null;
+      if (key) this.playFile(`content_found/${key}.wav`);
+      return;
+    }
+    if (['wrong_answer', 'level_win', 'level_retry', 'jump'].includes(event)) {
+      this.playFile(`phrases/${event}.wav`);
+    }
   },
 };
 
@@ -46,7 +131,9 @@ const JUMP_VELOCITY = 8.5;
 const GRAVITY = 24;
 const HIT_RADIUS = 1.9; // مسافة "اللمس" بين اللاعب والمنصّة
 const HEART_START = 3;
-const HINT_DELAY_MS = 9000;
+// تذكير دوري بالحرف/الرقم كل 5 ثواني وقت البحث (طلب صريح: "وهو يمشي
+// يكرر له الحرف") — يتبادل بين تكرار الحرف نفسه وتلميح الاتجاه.
+const REMINDER_DELAY_MS = 5000;
 const IDLE_DELAY_MS = 2600;
 
 const COLORS = {
@@ -80,6 +167,7 @@ const state = {
   playingIdle: false,
   invulnerableUntil: 0,
   lastHintAt: 0,
+  reminderCount: 0,
   roundStartedAt: 0,
 };
 
@@ -652,7 +740,16 @@ function startLevel() {
   state.roundIndex = clamp(config.resumeAt || 0, 0, config.items.length - 1);
   renderHearts();
   spawnPlayer();
-  beginRound();
+  // ترحيب باسم الطفل الحقيقي مرة وحدة ببداية المستوى (النص المكتوب فقط —
+  // الصوت المسجّل يستخدم "يا بطل" عام بدل الاسم، راجعي قسم "تخصيص اسم
+  // الطفل" بالبرومت الأصلي).
+  if (state.roundIndex === 0) {
+    showSpeech(`هيّا يا ${config.childName}! هل أنت مستعدّ للّعب؟ 🎮`, 2200);
+    Bridge.audio('level_intro'); // بدون symbol = ترحيب عام، مو تعريف عنصر.
+  }
+  // مهلة أطول أول جولة عشان صوت الترحيب ياخذ وقته كامل قبل ما يبدأ صوت
+  // الجولة الأولى (وإلا ينقطع أو يتداخل معه).
+  setTimeout(beginRound, state.roundIndex === 0 ? 3400 : 0);
 }
 
 function beginRound() {
@@ -660,6 +757,7 @@ function beginRound() {
   state.roundActive = true;
   state.roundStartedAt = performance.now();
   state.lastHintAt = state.roundStartedAt;
+  state.reminderCount = 0;
   state.invulnerableUntil = state.roundStartedAt + 400;
 
   player.position.set(0, 0, 0);
@@ -668,7 +766,10 @@ function beginRound() {
   layoutPedestals(config.items, state.target);
   renderTargetCard(state.target);
   renderProgress();
-  showSpeech(`دوّر على ${state.target.symbol}! زي ${state.target.exampleWord} ${state.target.emoji}`, 3200);
+  showSpeech(
+    `يا ${config.childName}، ابحث عن ${state.target.symbol}! مثل ${state.target.exampleWord} ${state.target.emoji}`,
+    3200,
+  );
   Bridge.audio('level_intro', { symbol: state.target.symbol });
   registerActivity();
 }
@@ -676,22 +777,27 @@ function beginRound() {
 function handleCorrectTouch(pedestal) {
   state.roundActive = false;
   spawnConfetti(pedestal.mesh.position.clone().add(new THREE.Vector3(0, 1.8, 0)));
-  showSpeech(pickPraise(), 2200);
-  Bridge.audio('correct_answer');
+  // "وجدنا حرف الألف! الألف! الألف! الألف!" — تكرار 3 مرات بالصوت عشان
+  // يرسخ بذاكرة الطفل (طلب صريح)، بدل التشجيع العام بس.
+  showSpeech(`${pickPraise()} وجدنا ${pedestal.item.symbol}! 🎉`, 3600);
+  Bridge.audio('found_answer', { symbol: pedestal.item.symbol });
   playCelebrationHop(() => {
-    state.roundIndex += 1;
-    if (state.roundIndex >= config.items.length) {
-      finishLevel(true);
-    } else {
-      beginRound();
-    }
+    // مهلة إضافية قبل الجولة الجاية عشان صوت التكرار ياخذ وقته (~4 ثواني).
+    setTimeout(() => {
+      state.roundIndex += 1;
+      if (state.roundIndex >= config.items.length) {
+        finishLevel(true);
+      } else {
+        beginRound();
+      }
+    }, 900);
   });
 }
 
 function handleWrongTouch(pedestal) {
   state.hearts -= 1;
   renderHearts();
-  showSpeech('ولا يهمك يا حمودي، جرب مرة ثانية! 💛', 2200);
+  showSpeech('لا بأس، حاول مرة أخرى يا بطل! 💛', 2200);
   Bridge.audio('wrong_answer');
   const pushDir = player.position.clone().sub(pedestal.mesh.position).setY(0);
   if (pushDir.lengthSq() < 0.001) pushDir.set(0, 0, 1);
@@ -708,10 +814,10 @@ function handleWrongTouch(pedestal) {
 }
 
 const PRAISE = [
-  'أحسنت يا بطل! 🌟',
-  'برافو عليك! 🎉',
-  'يا سلام عليك! ⭐',
-  'ممتاز يا حمودي! 🏆',
+  'أحسنت! 🌟',
+  'رائع جدّاً! 🎉',
+  'عمل ممتاز! ⭐',
+  'بارع يا بطل! 🏆',
 ];
 function pickPraise() {
   return PRAISE[Math.floor(Math.random() * PRAISE.length)];
@@ -720,22 +826,70 @@ function pickPraise() {
 function finishLevel(didWin) {
   if (didWin) {
     Bridge.audio('level_win');
-    showSpeech('خلّصت المستوى! 🎉', 0);
+    showSpeech('أنهيت المستوى بنجاح! 🎉', 0);
     Bridge.send({ type: 'result', outcome: 'win', heartsRemaining: state.hearts });
   } else {
     Bridge.audio('level_retry');
-    showSpeech('قربت توصل! جرب مرة ثانية يا بطل 💪', 0);
+    showSpeech('اقتربت كثيراً! حاول مرة أخرى يا بطل 💪', 0);
     Bridge.send({ type: 'result', outcome: 'retry', roundIndex: state.roundIndex });
   }
+
+  // بوضع الاختبار المباشر بالمتصفح (بدون Flutter) ما فيه أحد يستقبل رسالة
+  // النتيجة أعلاه ويعرض شاشة فوز/خسارة — نعرض بديل بسيط بنفس الصفحة
+  // بدل ما تحس التجربة "توقفت" بدون تفسير.
+  if (!hasBridge()) showDemoResult(didWin);
 }
 
-// ----- تلميح الاتجاه بعد 9 ثواني بدون وصول -----
+function showDemoResult(didWin) {
+  const veil = document.getElementById('demo-result-veil');
+  const btn = document.getElementById('demo-result-btn');
+  const levels = currentDemoLevels();
+  const hasNextLevel = didWin && demoLevelIndex + 1 < levels.length;
 
-function maybeGiveHint(now) {
+  document.getElementById('demo-result-emoji').textContent = didWin ? '🎉' : '💪';
+  document.getElementById('demo-result-title').textContent = didWin
+    ? 'أحسنت يا بطل!'
+    : 'اقتربت كثيراً يا بطل!';
+
+  if (didWin && !hasNextLevel) {
+    document.getElementById('demo-result-subtitle').textContent =
+      `أكملتَ كل مستويات "${DEMO_GROUP_LABELS[demoGroup]}"! 🏆 (خلّصت بـ ${state.hearts} قلوب متبقية)`;
+    btn.textContent = 'ابدأ من جديد 🔁';
+    btn.onclick = () => startDemoLevel(demoGroup, 0);
+  } else if (didWin) {
+    document.getElementById('demo-result-subtitle').textContent =
+      `خلّصت المستوى ${demoLevelIndex + 1} بـ ${state.hearts} قلوب متبقية 🌟 (بالتطبيق الحقيقي هذي لحظة شاشة الفوز وعدّاد النجوم)`;
+    btn.textContent = 'المستوى التالي ➡️';
+    btn.onclick = () => startDemoLevel(demoGroup, demoLevelIndex + 1);
+  } else {
+    document.getElementById('demo-result-subtitle').textContent =
+      'بالتطبيق الحقيقي هذي لحظة شاشة "حاول مرة ثانية" — تعيد نفس السؤال بقلوب جديدة';
+    btn.textContent = 'حاول مرة ثانية 🔁';
+    btn.onclick = () => startDemoLevel(demoGroup, demoLevelIndex);
+  }
+
+  veil.classList.remove('hidden');
+}
+
+// ----- تذكير دوري كل 5 ثواني: يتبادل بين تكرار الحرف وتلميح الاتجاه -----
+
+function maybeRemind(now) {
   if (!state.roundActive || state.inputLocked) return;
-  if (now - state.lastHintAt < HINT_DELAY_MS) return;
+  if (now - state.lastHintAt < REMINDER_DELAY_MS) return;
   state.lastHintAt = now;
+  state.reminderCount += 1;
 
+  // تذكير فردي = تكرار الحرف/الرقم نفسه (تعزيز للحفظ)، زوجي = تلميح اتجاه.
+  if (state.reminderCount % 2 === 1) {
+    showSpeech(`قُل: ${state.target.symbol}... مثل ${state.target.exampleWord}! 🔁`, 2400);
+    Bridge.audio('level_intro', { symbol: state.target.symbol });
+    return;
+  }
+
+  giveDirectionHint();
+}
+
+function giveDirectionHint() {
   const targetPedestal = state.pedestals.find((p) => p.item.symbol === state.target.symbol);
   if (!targetPedestal) return;
 
@@ -743,20 +897,24 @@ function maybeGiveHint(now) {
   if (toTarget.lengthSq() < 0.01) return;
   toTarget.normalize();
 
-  const forward = new THREE.Vector3(Math.sin(player.rotation.y), 0, Math.cos(player.rotation.y));
-  const angle = signedAngleBetween(forward, toTarget);
+  // مهم: التلميح لازم يكون نسبة للشاشة/الكاميرا الثابتة (نفس نظام
+  // الجويستيك: "قدام" = عالمياً -Z دائماً)، مو نسبة لاتجاه وجه الشخصية
+  // (rotation.y يتغيّر كل ما تلف) — وإلا يصير التلميح معكوس كل ما الشخصية
+  // ملفوفة بغير اتجاهها الأصلي (كان بق حقيقي هنا، تم تصحيحه).
+  const screenForward = new THREE.Vector3(0, 0, -1);
+  const angle = signedAngleBetween(screenForward, toTarget);
 
   let direction;
   let text;
   if (Math.abs(angle) < 0.9) {
     direction = 'ahead';
-    text = 'قدامك مباشرة! 👀';
+    text = 'أمامك مباشرة! 👀';
   } else if (angle > 0) {
     direction = 'right';
-    text = 'لف يمين شوي! ➡️';
+    text = 'التفت يميناً قليلاً! ➡️';
   } else {
     direction = 'left';
-    text = 'لف يسار شوي! ⬅️';
+    text = 'التفت يساراً قليلاً! ⬅️';
   }
   showSpeech(text, 2600);
   Bridge.audio('hint_direction', { direction });
@@ -830,7 +988,7 @@ function update() {
     }
   }
 
-  maybeGiveHint(now);
+  maybeRemind(now);
 
   // خلفية متحركة
   for (const cloud of clouds) {
@@ -892,12 +1050,7 @@ window.HamoudiGame = {
 function normalizeConfig(cfg) {
   const items = Array.isArray(cfg?.items) && cfg.items.length > 0
     ? cfg.items
-    : [
-        { symbol: 'ا', exampleWord: 'أسد', emoji: '🦁' },
-        { symbol: 'ب', exampleWord: 'بطة', emoji: '🦆' },
-        { symbol: 'ت', exampleWord: 'تفاح', emoji: '🍎' },
-        { symbol: 'ث', exampleWord: 'ثعلب', emoji: '🦊' },
-      ];
+    : currentDemoLevels()[demoLevelIndex];
   return {
     childName: cfg?.childName || 'حمودي',
     avatar: cfg?.avatar || {},
@@ -906,11 +1059,207 @@ function normalizeConfig(cfg) {
   };
 }
 
+// ============================== مجموعات ومستويات وضع الاختبار ==============================
+// بدون Flutter ما فيه ContentRepository.levelsFor — نفس المحتوى والتقسيم
+// (4 عناصر بالمستوى) مكرّر هنا عشان تقدرين تختبرين كل الحروف/الأرقام
+// (عربي وإنجليزي) بالمتصفح. راجعي lib/data/content_repository.dart للمصدر.
+function chunk4(items) {
+  const levels = [];
+  for (let i = 0; i < items.length; i += 4) levels.push(items.slice(i, i + 4));
+  return levels;
+}
+
+const DEMO_CONTENT = {
+  arabicLetters: [
+    ['أ', 'أسد', '🦁'], ['ب', 'بطة', '🦆'], ['ت', 'تفاح', '🍎'], ['ث', 'ثعلب', '🦊'],
+    ['ج', 'جمل', '🐫'], ['ح', 'حصان', '🐴'], ['خ', 'خروف', '🐑'], ['د', 'دب', '🐻'],
+    ['ذ', 'ذئب', '🐺'], ['ر', 'رمان', '🍇'], ['ز', 'زرافة', '🦒'], ['س', 'سمكة', '🐟'],
+    ['ش', 'شمس', '☀️'], ['ص', 'صقر', '🦅'], ['ض', 'ضفدع', '🐸'], ['ط', 'طائرة', '✈️'],
+    ['ظ', 'ظرف', '✉️'], ['ع', 'عصفور', '🐦'], ['غ', 'غزال', '🦌'], ['ف', 'فيل', '🐘'],
+    ['ق', 'قطة', '🐱'], ['ك', 'كلب', '🐶'], ['ل', 'ليمون', '🍋'], ['م', 'موز', '🍌'],
+    ['ن', 'نحلة', '🐝'], ['هـ', 'هدية', '🎁'], ['و', 'وردة', '🌹'], ['ي', 'يد', '✋'],
+  ],
+  englishLetters: [
+    ['A', 'Apple', '🍎'], ['B', 'Ball', '⚽'], ['C', 'Cat', '🐱'], ['D', 'Dog', '🐶'],
+    ['E', 'Elephant', '🐘'], ['F', 'Fish', '🐟'], ['G', 'Grapes', '🍇'], ['H', 'Hat', '🎩'],
+    ['I', 'Ice Cream', '🍦'], ['J', 'Juice', '🧃'], ['K', 'Kite', '🪁'], ['L', 'Lion', '🦁'],
+    ['M', 'Moon', '🌙'], ['N', 'Nest', '🪺'], ['O', 'Orange', '🍊'], ['P', 'Pizza', '🍕'],
+    ['Q', 'Queen', '👑'], ['R', 'Rabbit', '🐰'], ['S', 'Sun', '☀️'], ['T', 'Tiger', '🐯'],
+    ['U', 'Umbrella', '☂️'], ['V', 'Van', '🚐'], ['W', 'Watermelon', '🍉'], ['X', 'Xylophone', '🎹'],
+    ['Y', 'Yoyo', '🪀'], ['Z', 'Zebra', '🦓'],
+  ],
+  arabicNumbers: [
+    ['٠', 'صفر', '0️⃣'], ['١', 'واحد', '1️⃣'], ['٢', 'اثنان', '2️⃣'], ['٣', 'ثلاثة', '3️⃣'],
+    ['٤', 'أربعة', '4️⃣'], ['٥', 'خمسة', '5️⃣'], ['٦', 'ستة', '6️⃣'], ['٧', 'سبعة', '7️⃣'],
+    ['٨', 'ثمانية', '8️⃣'], ['٩', 'تسعة', '9️⃣'],
+  ],
+  englishNumbers: [
+    ['0', 'Zero', '0️⃣'], ['1', 'One', '1️⃣'], ['2', 'Two', '2️⃣'], ['3', 'Three', '3️⃣'],
+    ['4', 'Four', '4️⃣'], ['5', 'Five', '5️⃣'], ['6', 'Six', '6️⃣'], ['7', 'Seven', '7️⃣'],
+    ['8', 'Eight', '8️⃣'], ['9', 'Nine', '9️⃣'],
+  ],
+};
+
+const DEMO_GROUPS = Object.fromEntries(
+  Object.entries(DEMO_CONTENT).map(([group, rows]) => [
+    group,
+    chunk4(rows.map(([symbol, exampleWord, emoji]) => ({ symbol, exampleWord, emoji }))),
+  ]),
+);
+const DEMO_GROUP_LABELS = {
+  arabicLetters: '🇸🇦 حروف',
+  englishLetters: '🇬🇧 Letters',
+  arabicNumbers: '🇸🇦 أرقام',
+  englishNumbers: '🇬🇧 Numbers',
+};
+
+let demoGroup = 'arabicLetters';
+let demoLevelIndex = 0;
+let demoChildName = 'حمودي';
+let demoAvatar = {};
+
+function currentDemoLevels() {
+  return DEMO_GROUPS[demoGroup];
+}
+
+/** يبدأ مستوى/مجموعة محدّدة بنفس اسم/شخصية الطفل المحفوظة (بدون رجوع
+ * لمقدّمة الاسم/الشخصية من جديد). */
+function startDemoLevel(group, levelIndex) {
+  demoGroup = group;
+  const levels = currentDemoLevels();
+  demoLevelIndex = Math.max(0, Math.min(levelIndex, levels.length - 1));
+  document.getElementById('demo-result-veil').classList.add('hidden');
+  updateGroupSwitcherActive();
+  window.HamoudiGame.init({ childName: demoChildName, avatar: demoAvatar });
+}
+
+// ============================== مقدّمة وضع الاختبار (اسم + شخصية) ==============================
+// نفس 6 شخصيات lib/models/avatar_option.dart (kAvatarOptions) — مكرّرة
+// هنا لأن هذا جافاسكربت مستقل عن كود Flutter. عدّلي القيمتين مع بعض لو
+// أضفتِ/غيّرتِ شخصية بالتطبيق.
+const DEMO_AVATARS = [
+  { id: 'red_jacket', jacket: '#e2231a', skin: '#f2c29a', hair: '#2b1b12' },
+  { id: 'blue_jacket', jacket: '#2e86ff', skin: '#e8ad7c', hair: '#1a1a1a' },
+  { id: 'yellow_jacket', jacket: '#ffd23f', skin: '#8d5a3b', hair: '#3b2412' },
+  { id: 'green_jacket', jacket: '#34c759', skin: '#f6d2ae', hair: '#6b4226' },
+  { id: 'purple_jacket', jacket: '#9b5de5', skin: '#c98a5b', hair: '#120a06' },
+  { id: 'orange_jacket', jacket: '#ff8a3d', skin: '#e8ad7c', hair: '#b8860b' },
+];
+
+/** بطاقة داكنة فيها معاينة 3D حيّة للشخصية تدور ببطء — نفس buildCharacter()
+ * المستخدمة باللعب الفعلي، بس بمشهد Three.js صغير مستقل لكل بطاقة. */
+function createAvatarPreview(container, avatar) {
+  const canvas = document.createElement('canvas');
+  container.appendChild(canvas);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 20);
+  camera.position.set(0, 1.3, 4.8);
+  camera.lookAt(0, 1.3, 0);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+  const key = new THREE.DirectionalLight(0xffffff, 0.7);
+  key.position.set(2, 3, 2);
+  scene.add(key);
+
+  const character = buildCharacter(avatar);
+  scene.add(character);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  function resize() {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    if (w === 0 || h === 0) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  (function animate() {
+    character.rotation.y += 0.012;
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  })();
+}
+
+function setupPrologue() {
+  const prologueEl = document.getElementById('demo-prologue');
+  const nameStep = document.getElementById('prologue-step-name');
+  const avatarStep = document.getElementById('prologue-step-avatar');
+  const nameInput = document.getElementById('prologue-name-input');
+  const gridEl = document.getElementById('prologue-avatar-grid');
+
+  let childName = '';
+  let selectedAvatar = DEMO_AVATARS[0];
+
+  DEMO_AVATARS.forEach((avatar, i) => {
+    const card = document.createElement('div');
+    card.className = 'avatar-card' + (i === 0 ? ' selected' : '');
+    card.addEventListener('pointerdown', () => {
+      selectedAvatar = avatar;
+      gridEl.querySelectorAll('.avatar-card').forEach((el) => el.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+    gridEl.appendChild(card);
+    createAvatarPreview(card, avatar);
+  });
+
+  document.getElementById('prologue-name-btn').addEventListener('pointerdown', () => {
+    childName = nameInput.value.trim() || 'حمودي';
+    nameStep.classList.add('hidden');
+    avatarStep.classList.remove('hidden');
+  });
+
+  document.getElementById('prologue-avatar-btn').addEventListener('pointerdown', () => {
+    prologueEl.classList.add('hidden');
+    demoChildName = childName;
+    demoAvatar = selectedAvatar;
+    setupGroupSwitcher();
+    window.HamoudiGame.init({ childName, avatar: selectedAvatar });
+  });
+
+  prologueEl.classList.remove('hidden');
+}
+
+/** أزرار صغيرة أعلى الشاشة تنقل مباشرة لأول مستوى بأي مجموعة (حروف/أرقام
+ * عربي/إنجليزي) — أداة اختبار بس، ما تظهر جوا التطبيق الحقيقي. */
+function setupGroupSwitcher() {
+  const bar = document.getElementById('demo-group-switcher');
+  if (bar.childElementCount > 0) {
+    bar.classList.remove('hidden');
+    updateGroupSwitcherActive();
+    return;
+  }
+  Object.keys(DEMO_GROUPS).forEach((group) => {
+    const btn = document.createElement('button');
+    btn.className = 'demo-group-btn';
+    btn.textContent = DEMO_GROUP_LABELS[group];
+    btn.addEventListener('pointerdown', () => startDemoLevel(group, 0));
+    bar.appendChild(btn);
+  });
+  bar.classList.remove('hidden');
+  updateGroupSwitcherActive();
+}
+
+function updateGroupSwitcherActive() {
+  const bar = document.getElementById('demo-group-switcher');
+  [...bar.children].forEach((btn, i) => {
+    btn.classList.toggle('active', Object.keys(DEMO_GROUPS)[i] === demoGroup);
+  });
+}
+
 (async function boot() {
   await loadFonts();
   Bridge.send({ type: 'ready' });
   // وضع تجربة مستقل بالمتصفح (بدون Flutter) — أضيفي ?demo=1 بالرابط.
-  if (window.location.search.includes('demo=1')) {
-    window.HamoudiGame.init(null);
+  // نعرض مقدّمة بسيطة (اسم + شخصية) أول شي بدل ما نقفز مباشرة لعالم
+  // اللعب، عشان تجربة الاختبار تحاكي "تسجيل الدخول → اختيار الشخصية →
+  // اللعب" اللي بالتطبيق الحقيقي.
+  if (window.location.search.includes('demo=1') && !hasBridge()) {
+    setupPrologue();
   }
 })();

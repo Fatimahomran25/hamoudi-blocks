@@ -8,7 +8,7 @@ class ContentRepository {
   ContentRepository._();
 
   static const List<ContentItem> arabicLetters = [
-    ContentItem('ا', 'أسد', '🦁'),
+    ContentItem('أ', 'أسد', '🦁'),
     ContentItem('ب', 'بطة', '🦆'),
     ContentItem('ت', 'تفاح', '🍎'),
     ContentItem('ث', 'ثعلب', '🦊'),

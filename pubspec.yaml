@@ -8,8 +8,8 @@ environment:
   sdk: ^3.10.7
 
 # ملاحظة (راجعي NEXT_STEPS.md بجذر المشروع لتفاصيل كل مرحلة):
-#   - Milestone 1 (هيكل التطبيق) و Milestone 2 (عالم اللعب 3D) منتهيتين.
-#   - Milestone 3 (الصوت المسجّل): audioplayers لسا ما انضاف (سيُستخدم فعلياً وقتها).
+#   - Milestone 1 (هيكل التطبيق) و Milestone 2 (عالم اللعب 3D) و Milestone 3
+#     (الصوت المسجّل) منتهيات.
 #   - Milestone 4 (الباك اند): firebase_core, firebase_auth, cloud_firestore, firebase_messaging.
 dependencies:
   flutter:
@@ -39,6 +39,10 @@ dependencies:
   # (راجعي lib/screens/game/game_screen.dart).
   webview_flutter: ^4.14.1
 
+  # تشغيل المقاطع الصوتية المسجّلة مسبقاً (Piper TTS محلي، صوت عربي طبيعي)
+  # بـ assets/audio/ — راجعي lib/services/audio_service.dart.
+  audioplayers: ^6.7.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -48,8 +52,17 @@ flutter:
   uses-material-design: true
 
   assets:
-    # أصوات ومحتوى اللعبة — تُضاف فعلياً بـ Milestone 3، المجلد جاهز من الآن.
-    - assets/audio/
+    # الصوت المسجّل مسبقاً (Azure Neural TTS، صوت سعودي — راجعي
+    # lib/services/audio_service.dart لتفاصيل التشغيل والتسمية):
+    #   content/       — "يا بطل! قول: أ... أسد!" (74 ملف: ar_letter_0..27،
+    #                    en_letter_0..25، ar_number_0..9، en_number_0..9؛
+    #                    الترقيم يطابق ترتيب lib/data/content_repository.dart).
+    #   content_found/ — تكرار الحرف 3 مرات عند النجاح ("لقينا حرف الألف!
+    #                    الألف! الألف! الألف!") — نفس ترقيم content/.
+    #   phrases/       — عبارات عامة (ترحيب، تشجيع، تلميح اتجاه، خطأ، فوز...).
+    - assets/audio/content/
+    - assets/audio/content_found/
+    - assets/audio/phrases/
     - assets/images/
 
     # عالم اللعب ثلاثي الأبعاد (Milestone 2) — Three.js محلي بالكامل

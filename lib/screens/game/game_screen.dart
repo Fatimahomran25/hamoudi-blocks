@@ -49,15 +49,14 @@ class _GameScreenState extends State<GameScreen> {
   bool _handledResult = false;
 
   /// تحويل مفاتيح رسائل الصوت القادمة من الجسر لـ [GameAudioEvent] المطابق.
-  /// 'level_intro' مستثنى عمداً لأنه يُعالَج بميثود مختلف (playContentIntro)
-  /// لأنه يحتاج رمز العنصر تحديداً، مو حدث ثابت.
+  /// 'level_intro' و'hint_direction' مستثناة عمداً لأنها تحتاج معالجة
+  /// خاصة (رمز العنصر أو الاتجاه) — راجعي [_handleAudioEvent].
   static const Map<String, GameAudioEvent> _audioEventMap = {
     'ui_tap': GameAudioEvent.buttonTap,
     'correct_answer': GameAudioEvent.correctAnswer,
     'wrong_answer': GameAudioEvent.wrongAnswer,
     'level_win': GameAudioEvent.levelWin,
     'level_retry': GameAudioEvent.levelRetry,
-    'hint_direction': GameAudioEvent.hintDirection,
     'jump': GameAudioEvent.jump,
   };
 
@@ -97,13 +96,30 @@ class _GameScreenState extends State<GameScreen> {
 
   void _handleAudioEvent(Map<String, dynamic> data) {
     final event = data['event'] as String?;
-    if (event == 'level_intro') {
-      final symbol = data['symbol'] as String?;
-      if (symbol != null) AudioService.instance.playContentIntro(symbol);
-      return;
+    switch (event) {
+      case 'level_intro':
+        // مع رمز = تعريف عنصر تعليمي محدد (بداية جولة)؛ بدون رمز = ترحيب
+        // عام ببداية الجلسة (راجعي startLevel() بـ assets/game3d/game.js).
+        final symbol = data['symbol'] as String?;
+        if (symbol != null) {
+          AudioService.instance.playContentIntro(symbol);
+        } else {
+          AudioService.instance.play(GameAudioEvent.levelIntro);
+        }
+        break;
+      case 'hint_direction':
+        AudioService.instance.playHintDirection(data['direction'] as String? ?? 'ahead');
+        break;
+      case 'found_answer':
+        // احتفال بتكرار الحرف/الرقم 3 مرات — يحتاج الرمز نفسه، راجعي
+        // AudioService.playFoundContent.
+        final symbol = data['symbol'] as String?;
+        if (symbol != null) AudioService.instance.playFoundContent(symbol);
+        break;
+      default:
+        final mapped = _audioEventMap[event];
+        if (mapped != null) AudioService.instance.play(mapped);
     }
-    final mapped = _audioEventMap[event];
-    if (mapped != null) AudioService.instance.play(mapped);
   }
 
   void _sendInitConfig() {
