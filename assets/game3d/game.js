@@ -13,7 +13,13 @@
 //     {type:'result', outcome:'win', heartsRemaining} | {outcome:'retry', roundIndex}
 //     {type:'exit'}
 
-import * as THREE from './vendor/three.module.js';
+// ملاحظة مهمة: Three.js يُحمَّل هنا كسكربت عادي (UMD، متغيّر THREE عام)
+// عبر <script src="./vendor/three.min.js"> بـ index.html قبل هالملف —
+// مو كـ ES Module (import). جرّبنا ES Modules أول، لكن WKWebView بآيفون
+// (عبر webview_flutter's loadFlutterAsset) ما يضمن نوع MIME صحيح
+// (text/javascript) للملفات المحلية، وسكربتات type="module" صارمة بهالخصوص
+// فتفشل بصمت (يعلق التحميل على شاشة 🧊 للأبد). السكربت العادي مرن أكثر
+// ويشتغل بثبات على أندرويد وآيفون معاً.
 
 // ============================== الجسر (Bridge) ==============================
 

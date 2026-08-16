@@ -93,6 +93,12 @@
     </div>
   </div>
 
-  <script type="module" src="./game.js"></script>
+  <!--
+    سكربتات عادية (مو type="module") عمداً — راجعي التعليق أعلى game.js
+    لسبب هالقرار (توافق WKWebView بآيفون). three.min.js يعرّف THREE
+    كمتغيّر عام يستخدمه game.js بعده مباشرة.
+  -->
+  <script src="./vendor/three.min.js"></script>
+  <script src="./game.js" defer></script>
 </body>
 </html>

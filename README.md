@@ -61,7 +61,8 @@ lib/
 
 assets/game3d/              # عالم اللعب ثلاثي الأبعاد (Three.js، بدون إنترنت)
   index.html  style.css  game.js
-  vendor/three.module.js    # مكتبة Three.js مُضمَّنة محلياً (لا CDN)
+  vendor/three.min.js       # مكتبة Three.js مُضمَّنة محلياً (لا CDN؛ سكربت
+                             # عادي مو ES Module — راجعي تعليق أعلى game.js)
   fonts/*.woff2              # خط Baloo Bhaijaan 2 مُضمَّن محلياً
 
 assets/audio/                # صوت سعودي طبيعي مسجّل مسبقاً (Azure Neural TTS، فصحى)
