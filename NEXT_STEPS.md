@@ -173,3 +173,32 @@ pre-recorded rather than a real conversational AI:
   AI carries real risk — unpredictable output that can't be reviewed in
   advance. Every line the companion says needs to be written and approved
   by the parent ahead of time, exactly like the rest of the app's audio.
+
+## 7️⃣ Milestone 7 (future idea) — real-friend multiplayer
+
+Let Hamoudi join the same game world as real-life friends, each with
+their own character, exploring and finding pedestals together instead of
+solo.
+
+**Communication is preset phrases/emoji only — never free text.** With
+players this young, open typed chat is a real safety risk (impossible to
+moderate what a child might type or receive). Instead, a small wheel of
+pre-written, parent-approved phrases and emoji ("Nice job! 👏", "Let's
+play! 🎮") — the same "curated, not open" principle as Milestone 6's
+companion character.
+
+Technically this needs lightweight real-time state sync (who's where,
+who found what) — Firebase Realtime Database or Firestore, still within
+the free tier for a small group of friends, built on top of the same
+account/backend work as Milestone 4 rather than a separate system.
+
+## 8️⃣ Milestone 8 (future idea) — more educational content categories
+
+Expand beyond letters and numbers into new `ContentGroup` categories —
+shapes, colors, simple counting/addition, or animals, for example. The
+content model already supports this cleanly: each new category is just
+another entry in `lib/data/content_repository.dart` (items + level
+chunking) plus a matching set of pre-recorded audio clips generated the
+same way as the current 160 — no screen needs new logic, since
+`MainMenuScreen` → `LanguageSelectScreen` → `LevelsScreen` → `GameScreen`
+are all already generic over `ContentGroup`.
