@@ -62,16 +62,23 @@ Azure، وخط إنتاج مجاني عبر GitHub Actions يبني نسخة آ�
 
 ## خريطة الشاشات (Screen Flow)
 
-```
-SignInScreen (حساب الوالد — مرة وحدة بس)
-  → AddChildScreen (اسم الطفل)
-    → AvatarSelectScreen (اختيار الشخصية)
-      → GameLoginScreen (بروفايل الطفل، دخول تلقائي بالمرات الجاية)
-        → MainMenuScreen (🔤 الحروف / 🔢 الأرقام)
-          → LanguageSelectScreen (🇸🇦 / 🇬🇧)
-            → LevelsScreen (خريطة المستويات + النجوم + القفل التدريجي)
-              → GameScreen (WebView — عالم Three.js ثلاثي الأبعاد الحقيقي)
-                → LevelResultScreen (فوز 🎉 / حاول مرة ثانية 💪)
+```mermaid
+flowchart TD
+    A["👤 SignInScreen<br/>حساب الوالد — مرة وحدة بس"] --> B["👶 AddChildScreen<br/>اسم الطفل"]
+    B --> C["🎨 AvatarSelectScreen<br/>اختيار الشخصية"]
+    C --> D["🏠 GameLoginScreen<br/>بروفايل الطفل — دخول تلقائي بالمرات الجاية"]
+    D --> E["📋 MainMenuScreen<br/>🔤 الحروف / 🔢 الأرقام"]
+    E --> F["🌐 LanguageSelectScreen<br/>🇸🇦 عربي / 🇬🇧 English"]
+    F --> G["🗺️ LevelsScreen<br/>خريطة المستويات + النجوم + القفل التدريجي"]
+    G --> H["🎮 GameScreen<br/>عالم Three.js ثلاثي الأبعاد الحقيقي"]
+    H -->|فوز 🎉| I["🏆 LevelResultScreen"]
+    H -->|حاول مرة ثانية 💪| I
+    I -->|المستوى التالي| G
+    I -->|كل المستويات| G
+
+    style D fill:#2E86FF,color:#fff
+    style H fill:#34C759,color:#fff
+    style I fill:#FFD23F,color:#000
 ```
 
 ## هيكل الملفات (Project Structure)
