@@ -176,8 +176,9 @@ pre-recorded rather than a real conversational AI:
 
 ## 7️⃣ Milestone 7 (future idea) — real-friend multiplayer
 
-Let Hamoudi join the same game world as real-life friends, each with
-their own character, exploring and finding pedestals together instead of
+Let Hamoudi join the same game world as real-life friends his own age
+(preschool/kindergarten-aged), each with their own character, exploring
+and finding pedestals together instead of
 solo.
 
 **Communication is preset phrases/emoji only — never free text.** With
