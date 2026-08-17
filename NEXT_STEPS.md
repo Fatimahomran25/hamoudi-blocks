@@ -156,3 +156,20 @@ a new key from the same Speech resource is required
   any other game's logo shape**, even if the name differs (see the "logo
   and name" section of the original prompt for why this constraint
   exists).
+
+## 6️⃣ Milestone 6 (future idea) — an in-world "friend" companion character
+
+A second blocky character in the game world that occasionally speaks
+pre-written encouragement or simple comments to the child ("Nice job
+finding that one!", "Let's look over there!") — using the exact same
+pre-recorded-audio system already in place (`assets/audio/`,
+`AudioService`), not a new mechanism.
+
+**Deliberately not a live AI chat.** Two reasons this stays scripted/
+pre-recorded rather than a real conversational AI:
+- **Cost**: every message to a live AI has a per-call cost, which breaks
+  the project's zero-recurring-cost commitment.
+- **Safety**: a 4-year-old having an open, unscripted conversation with an
+  AI carries real risk — unpredictable output that can't be reviewed in
+  advance. Every line the companion says needs to be written and approved
+  by the parent ahead of time, exactly like the rest of the app's audio.
